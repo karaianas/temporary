@@ -17,7 +17,6 @@ limitations under the License.
 
 ************************************************************************************/
 
-
 #include <iostream>
 #include <memory>
 #include <exception>
@@ -60,6 +59,9 @@ using glm::quat;
 //
 
 #include <GL/glew.h>
+
+// My implementation
+#include "Scene.h"
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
 	GLuint status = glCheckFramebufferStatus(target);
