@@ -30,6 +30,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="shaders\model.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\model.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">

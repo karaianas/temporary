@@ -878,6 +878,9 @@ class ExampleApp : public RiftApp {
 	std::shared_ptr<ColorCubeScene> cubeScene;
 	std::shared_ptr<ControllerCube> controller;
 
+	// My implementation
+	Scene* scn;
+
 public:
 	ExampleApp() { }
 
@@ -889,6 +892,9 @@ protected:
 		ovr_RecenterTrackingOrigin(_session);
 		cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
 		controller = std::shared_ptr<ControllerCube>(new ControllerCube());
+
+		scn = new Scene();
+
 	}
 
 	void shutdownGl() override {

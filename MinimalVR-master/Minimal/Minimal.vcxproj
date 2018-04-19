@@ -137,6 +137,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="shaders\model.frag" />
+    <None Include="shaders\model.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h" />
