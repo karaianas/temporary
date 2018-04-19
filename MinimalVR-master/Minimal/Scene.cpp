@@ -8,6 +8,7 @@ Scene::Scene()
 {
 	program = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 	sphere = new Model("models//sphere//sphere.obj");
+	//cursor = new Model("models//nanosuit//nanosuit.obj");
 	cursor = new Model("models//sphere//sphere.obj");
 
 	srand(time(NULL));
@@ -15,16 +16,17 @@ Scene::Scene()
 	//cout << "random number: " << highlight << endl;
 	int counter = 0;
 
-	float scaleFactor = 0.07f/2.0f;
+	radius = 0.07f/2.0f;
 	float scaleFactor2 = 0.28f / 2.0f;
-	cursorM = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+	cursorM = glm::scale(glm::mat4(1.0f), glm::vec3(radius));
+	//cursorColor = glm::vec3(0.0f);
 
 	for (int i = -2; i <= 2; i++)
 		for (int j = -2; j <= 2; j++)
 			for (int k = -2; k <= 2; k++)
 			{
 				glm::mat4 T = glm::translate(glm::mat4(1.0f), scaleFactor2 * glm::vec3(float(i), float(j), float(k)));
-				glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(scaleFactor));
+				glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(radius));
 				//glm::mat4 T2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 2.0f, 0.0f));
 
 				instances.push_back(T * S);
@@ -57,9 +59,26 @@ void Scene::draw(glm::mat4 V, glm::mat4 P)
 	}
 }
 
-void Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos)
+void Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState)
 {
 	glUseProgram(program);
 	cursorM[3] = glm::vec4(rHandPos, 1.0f);
-	cursor->Draw(program, cursorM, V, P, cursorColor);
+	if (trigState)
+	{
+		cursor->Draw(program, cursorM, V, P, cursorColor);
+		testIntersection(rHandPos);
+	}
+	else
+		cursor->Draw(program, cursorM, V, P, glm::vec3(0.0f));
+}
+
+void Scene::testIntersection(glm::vec3 rHandPos)
+{
+	for(int i = 0; i < instances.size(); i++)
+	//for (auto M : instances)
+	{
+		glm::vec3 center(instances[i][3]);
+		if (glm::length(center - rHandPos) < radius)
+			colors[i] = glm::vec3(0.0f);
+	}
 }

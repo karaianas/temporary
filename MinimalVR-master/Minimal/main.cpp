@@ -573,6 +573,27 @@ protected:
 		// Display positions for debug purposes:
 		//std::cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << std::endl;
 		//std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
+		
+		// Trigger
+		ovrInputState inputState;
+		bool trigState = false;
+		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
+		{
+			if (inputState.Buttons & ovrButton_A)
+			{
+				// Handle A button being pressed
+			}
+			if (inputState.IndexTrigger[ovrHand_Right] > 0.5f)
+			{
+				// Handle hand grip...
+				//cout << "Trig " << inputState.IndexTrigger[ovrHand_Right] << endl;
+				trigState = true;
+			}
+			else
+				trigState = false;
+		}
+
+		
 		// Add controller support -------------------------------------------------------------------------------------------------
 
 		ovrPosef eyePoses[2];
@@ -589,7 +610,9 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
-			renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z));// here
+			renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
+				glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z), \
+				trigState);// here
 		});
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -606,7 +629,7 @@ protected:
 
 	}
 
-	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos) = 0;
+	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -905,12 +928,12 @@ protected:
 	}
 
 	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos) override {
+	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) override {
 		
 		//cubeScene->render(projection, glm::inverse(headPose));
 		//controller->render(projection, glm::inverse(headPose), rHandPos);
 		myScene->draw(glm::inverse(headPose), projection);
-		myScene->drawCursor(glm::inverse(headPose), projection, rHandPos);
+		myScene->drawCursor(glm::inverse(headPose), projection, rHandPos, trigState);
 	}
 };
 
