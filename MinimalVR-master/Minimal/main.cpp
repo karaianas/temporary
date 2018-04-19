@@ -63,6 +63,7 @@ using glm::quat;
 
 // My implementation
 #include "Scene.h"
+#include <time.h>
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
 	GLuint status = glCheckFramebufferStatus(target);
@@ -441,6 +442,11 @@ private:
 	uvec2 _renderTargetSize;
 	uvec2 _mirrorSize;
 
+	// My implementation
+	bool gameStart;
+	bool gameEnd;
+	clock_t stime;
+
 public:
 
 	RiftApp() {
@@ -532,6 +538,9 @@ protected:
 			FAIL("Could not create mirror texture");
 		}
 		glGenFramebuffers(1, &_mirrorFbo);
+
+		gameStart = false;
+		gameEnd = false;
 	}
 
 	void onKey(int key, int scancode, int action, int mods) override {
@@ -588,6 +597,20 @@ protected:
 				// Handle hand grip...
 				//cout << "Trig " << inputState.IndexTrigger[ovrHand_Right] << endl;
 				trigState = true;
+				if (!gameStart)
+				{
+					cout << "Game Start" << endl;
+					stime = clock();
+					gameStart = true;
+				}
+
+				if (gameEnd)
+				{
+					gameEnd = false;
+					cout << "Game Start" << endl;
+					stime = clock();
+					gameStart = true;
+				}
 			}
 			else
 				trigState = false;
@@ -610,9 +633,19 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
-			renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
-				glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z), \
-				trigState);// here
+			if (gameStart && !gameEnd)
+			{
+				if ((clock() - stime) / CLOCKS_PER_SEC < 30)
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
+						glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z), \
+						trigState);// here
+				else
+				{
+					gameEnd = true;
+					cout << "Game End: " << getCorrect() << endl;
+					setCorrect();
+				}
+			}
 		});
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -629,6 +662,8 @@ protected:
 
 	}
 
+	virtual int getCorrect() = 0;
+	virtual void setCorrect() = 0;
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
 };
 
@@ -904,6 +939,8 @@ class ExampleApp : public RiftApp {
 
 	// My implementation
 	std::shared_ptr<Scene> myScene;
+	clock_t itime;
+	clock_t ftime;
 	//Scene* myScene;
 
 public:
@@ -934,6 +971,16 @@ protected:
 		//controller->render(projection, glm::inverse(headPose), rHandPos);
 		myScene->draw(glm::inverse(headPose), projection);
 		myScene->drawCursor(glm::inverse(headPose), projection, rHandPos, trigState);
+	}
+
+	int getCorrect()
+	{
+		return myScene->counter;
+	}
+
+	void setCorrect()
+	{
+		myScene->counter = 0;
 	}
 };
 
