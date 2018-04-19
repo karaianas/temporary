@@ -42,10 +42,10 @@ public:
 	}
 
 	// draws the model, and thus all its meshes
-	void Draw(GLuint program, glm::mat4 M, glm::mat4 V, glm::mat4 P)
+	void Draw(GLuint program, glm::mat4 M, glm::mat4 V, glm::mat4 P, glm::vec3 color)
 	{
 		for (unsigned int i = 0; i < meshes.size(); i++)
-			meshes[i].Draw(program, M, V, P);
+			meshes[i].Draw(program, M, V, P, color);
 	}
 
 private:

@@ -58,7 +58,7 @@ public:
 	}
 
 	// render the mesh
-	void Draw(GLuint program, glm::mat4 M, glm::mat4 V, glm::mat4 P)
+	void Draw(GLuint program, glm::mat4 M, glm::mat4 V, glm::mat4 P, glm::vec3 color)
 	{
 		// bind appropriate textures
 		unsigned int diffuseNr = 1;
@@ -89,9 +89,10 @@ public:
 		glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &M[0][0]);
 		glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
 		glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &P[0][0]);
-
+		glUniform3f(glGetUniformLocation(program, "color"), color.x, color.y, color.z);
 		// draw mesh
 		glBindVertexArray(VAO);
+		//glDrawArrays(GL_POINTS, 0, vertices.size()/3);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 		//cout << indices.size() << endl;
 		glBindVertexArray(0);

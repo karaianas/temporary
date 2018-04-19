@@ -17,6 +17,7 @@ limitations under the License.
 
 ************************************************************************************/
 
+
 #include <iostream>
 #include <memory>
 #include <exception>
@@ -557,8 +558,8 @@ protected:
 		handStatus[0] = trackState.HandStatusFlags[0];
 		handStatus[1] = trackState.HandStatusFlags[1];
 		// Display status for debug purposes:
-		std::cerr << "handStatus[left]  = " << handStatus[ovrHand_Left] << std::endl;
-		std::cerr << "handStatus[right] = " << handStatus[ovrHand_Right] << std::endl;
+		//std::cerr << "handStatus[left]  = " << handStatus[ovrHand_Left] << std::endl;
+		//std::cerr << "handStatus[right] = " << handStatus[ovrHand_Right] << std::endl;
 
 		// Process controller position and orientation:
 		ovrPosef handPoses[2];  // These are position and orientation in meters in room coordinates, relative to tracking origin. Right-handed cartesian coordinates.
@@ -570,8 +571,8 @@ protected:
 		handPosition[0] = handPoses[0].Position;
 		handPosition[1] = handPoses[1].Position;
 		// Display positions for debug purposes:
-		std::cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << std::endl;
-		std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
+		//std::cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << std::endl;
+		//std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
 		// Add controller support -------------------------------------------------------------------------------------------------
 
 		ovrPosef eyePoses[2];
@@ -875,11 +876,12 @@ public:
 
 // An example application that renders a simple cube
 class ExampleApp : public RiftApp {
-	std::shared_ptr<ColorCubeScene> cubeScene;
-	std::shared_ptr<ControllerCube> controller;
+	//std::shared_ptr<ColorCubeScene> cubeScene;
+	//std::shared_ptr<ControllerCube> controller;
 
 	// My implementation
-	Scene* scn;
+	std::shared_ptr<Scene> myScene;
+	//Scene* myScene;
 
 public:
 	ExampleApp() { }
@@ -887,25 +889,28 @@ public:
 protected:
 	void initGl() override {
 		RiftApp::initGl();
-		glClearColor(0.7f, 0.7f, 0.7f, 0.0f);
+		glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
-		cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
-		controller = std::shared_ptr<ControllerCube>(new ControllerCube());
-
-		scn = new Scene();
+		//cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
+		//controller = std::shared_ptr<ControllerCube>(new ControllerCube());
+		myScene = std::shared_ptr<Scene>(new Scene());
+		//myScene = new Scene();
 
 	}
 
 	void shutdownGl() override {
-		cubeScene.reset();
-		controller.reset();
+		//cubeScene.reset();
+		//controller.reset();
 	}
 
 	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos) override {
-		cubeScene->render(projection, glm::inverse(headPose));
-		controller->render(projection, glm::inverse(headPose), rHandPos);
+		
+		//cubeScene->render(projection, glm::inverse(headPose));
+		//controller->render(projection, glm::inverse(headPose), rHandPos);
+		myScene->draw(glm::inverse(headPose), projection);
+		myScene->drawCursor(glm::inverse(headPose), projection, rHandPos);
 	}
 };
 
