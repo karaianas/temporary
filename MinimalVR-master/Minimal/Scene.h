@@ -7,7 +7,7 @@ public:
 	//~Scene();
 
 	void draw(glm::mat4 V, glm::mat4 P);
-	void drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState);
+	bool drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState);
 	void drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 
 	bool testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P);
@@ -15,9 +15,11 @@ public:
 	void randomEasy();
 	void randomMedium();
 	void randomHard();
+	void randomCrazy();
 
 	int counter;
 	int level;
+	bool touched;
 	glm::mat4 M;
 
 private:
@@ -38,5 +40,5 @@ private:
 	vector<glm::vec3> pcolors;
 
 	int highlight;
-	bool touched;
+
 };

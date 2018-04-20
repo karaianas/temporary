@@ -57,8 +57,9 @@ void Scene::draw(glm::mat4 V, glm::mat4 P)
 	}
 }
 
-void Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState)
+bool Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState)
 {
+	bool value = false;
 	glUseProgram(program);
 	cursorM[3] = glm::vec4(rHandPos, 1.0f);
 	if (trigState)
@@ -70,16 +71,23 @@ void Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigSt
 			{
 				//cout << "Got it: " << counter << endl;
 				counter++;
+				value = touched;
 			}
 
 			if (level == 0)
 				randomEasy();
 			else if (level == 1)
 				randomMedium();
+			else if (level == 2)
+				randomHard();
+			else
+				randomCrazy();
 		}
 	}
 	else
 		cursor->Draw(program, cursorM, V, P, cursorColor);
+
+	return value;
 }
 
 void Scene::drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P)
@@ -91,9 +99,6 @@ void Scene::drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 		T[3] = M[3];
 		popcorn->Draw(program, T * popcorns[i], V, P, colors[highlight]);
 	}
-
-	// Reshuffle
-	//randomEasy();
 }
 
 bool Scene::testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P)
@@ -110,6 +115,7 @@ bool Scene::testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P)
 		touched = true;
 		return true;
 	}
+	//touched = false;
 	return false;
 }
 
@@ -170,6 +176,65 @@ void Scene::randomMedium()
 	for (int i = 0; i < 125; i++)
 	{
 		colors.push_back(factor * glm::vec3((float)red[i], (float)green[i], (float)blue[i]));
+	}
+	cursorColor = colors[highlight];
+	touched = false;
+}
+
+void Scene::randomHard()
+{
+	vector<int> sth;
+	vector<int> sth2;
+
+	for (int i = 0; i < 125; i++)
+	{
+		sth.push_back(i);
+		sth2.push_back(i);
+	}
+	random_shuffle(sth.begin(), sth.end());
+	random_shuffle(sth2.begin(), sth2.end());
+
+	float factor = 1.0f / 124.0f;
+	srand(time(NULL));
+	highlight = rand() % 125;
+	int index = rand() % 3;
+	int index2 = rand() % 3;
+	while (index2 == index)
+		index2 = rand() % 3;
+
+	colors.clear();
+	for (int i = 0; i < 125; i++)
+	{
+		glm::vec3 color(0.0f);
+		color[index] = sth[i];
+		color[index2] = sth2[i];
+		colors.push_back(factor * color);
+	}
+	cursorColor = colors[highlight];
+	touched = false;
+}
+
+void Scene::randomCrazy()
+{
+	vector<int> sth;
+
+	for (int i = 0; i < 125; i++)
+	{
+		sth.push_back(i);
+	}
+	random_shuffle(sth.begin(), sth.end());
+
+	float factor = 1.0f / 124.0f;
+	srand(time(NULL));
+	highlight = rand() % 125;
+	int index = rand() % 3;
+
+	colors.clear();
+	for (int i = 0; i < 125; i++)
+	{
+		glm::vec3 color(0.0f);
+		color[index] = sth[i];
+		colors.push_back(factor * color);
 	}
 	cursorColor = colors[highlight];
 	touched = false;

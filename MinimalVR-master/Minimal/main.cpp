@@ -443,11 +443,19 @@ private:
 	uvec2 _mirrorSize;
 
 	// My implementation
-	bool gameStart;
-	bool gameEnd;
+
 	clock_t stime;
 	int level;
 
+	bool gameStart;
+	bool gameEnd;
+	bool levelChange;
+	bool moveChange;
+	bool resultTest;
+
+	unsigned char * dataBufferX;
+	ovrHapticsBuffer bufferX;
+	int bufferSize;
 public:
 
 	RiftApp() {
@@ -543,6 +551,22 @@ protected:
 		gameStart = false;
 		gameEnd = false;
 		level = 0;
+		levelChange = false;
+		moveChange = false;
+		resultTest = false;
+
+		// Haptic
+		bufferSize = 256;
+		dataBufferX = (unsigned char *)malloc(bufferSize);
+		for (int i = 0; i < bufferSize; i++)
+		{
+			dataBufferX[i] = (unsigned char)0;
+			if (i % 5 == 0) dataBufferX[i] = 255;
+		}
+
+		bufferX.SubmitMode = ovrHapticsBufferSubmit_Enqueue;
+		bufferX.SamplesCount = bufferSize;
+		bufferX.Samples = (void *)dataBufferX;
 	}
 
 	void onKey(int key, int scancode, int action, int mods) override {
@@ -585,59 +609,73 @@ protected:
 		// Display positions for debug purposes:
 		//std::cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << std::endl;
 		//std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
-		
-		// Move
-		glm::mat4 T(1.0f);
-		T[3] = glm::vec4(handPosition[0].x, handPosition[0].y, handPosition[0].z, 1.0f);
 
-		glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
-
-		/*R[0][0] = 1 - 2 * pow(y, 2) - 2 * pow(z, 2);
-		R[0][1] = 2 * x * y + 2 * z * w;
-		R[0][2] = 2 * x * z - 2 * y * w;
-
-		R[1][0] = 2 * x * y - 2 * z * w;
-		R[1][1] = 1 - 2 * pow(x, 2) - 2 * pow(z, 2);
-		R[1][2] = 2 * y *  +2 * x * w;
-		
-		R[2][0] = 2 * x * z + 2 * y * w;
-		R[2][1] = 2 * y * z - 2 * x * w;
-		R[2][2] = 1 - 2 * pow(x, 2) - 2 * pow(y, 2);*/
-
-		setModel(T * R);
-
-		// Trigger
 		ovrInputState inputState;
 		bool trigState = false;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
 			if (inputState.Buttons & ovrButton_A)
 			{
-				// Change level
-				setLevel(1);
+				if (!levelChange)
+				{
+					levelChange = true;
+					if (level == 0)
+						level = 1;
+					else if (level == 1)
+						level = 2;
+					else if (level == 2)
+						level = 3;
+					else if (level == 3)
+						level = 0;
+					setLevel(level);
+					cout << "Level: " << level << endl;
+				}
 			}
-			if (inputState.Buttons & ovrButton_B)
+			else
+				levelChange = false;
+
+			if (inputState.HandTrigger[ovrHand_Left] > 0.7f && !moveChange)
 			{
-				// Change level
-				setLevel(2);
+				moveChange = true;
+				// Move
+				glm::mat4 T(1.0f);
+				T[3] = glm::vec4(handPosition[0].x, handPosition[0].y, handPosition[0].z, 1.0f);
+
+				glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
+
+				setModel(T * R);
 			}
+			else
+			{
+				moveChange = false;
+			}
+			//else
+			//{
+			//	glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
+
+			//	//R_prev = R * R_prev;
+			//	setModel(R);
+			//}
 			if (inputState.IndexTrigger[ovrHand_Right] > 0.7f)
 			{
-				//cout << "Trig " << inputState.IndexTrigger[ovrHand_Right] << endl;
 				trigState = true;
 				if (!gameStart)
 				{
+					cout << "---------------------------------" << endl;
 					cout << "Game Start" << endl;
+					level = 0;
+					setLevel(level);
 					stime = clock();
 					gameStart = true;
-
-					//ovr_SetControllerVibration(_session, ovrControllerType_RTouch, 0.2f, 1);
 				}
 
 				if (gameEnd)
 				{
 					gameEnd = false;
+					cout << "---------------------------------" << endl;
 					cout << "Game Start" << endl;
+					level = 0;
+					setLevel(level);
 					stime = clock();
 					gameStart = true;
 				}
@@ -665,18 +703,34 @@ protected:
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 			if (gameStart && !gameEnd)
 			{
-				if ((clock() - stime) / CLOCKS_PER_SEC < 30)
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
+				if ((clock() - stime) / CLOCKS_PER_SEC < 60)
+				{
+					resultTest = renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
 						glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z), \
-						trigState);// here
+						trigState);
+
+					if (resultTest)
+					{
+						ovrHapticsPlaybackState playbackState;
+						ovrResult result = ovr_GetControllerVibrationState(_session, ovrControllerType_RTouch, &playbackState);
+						if (playbackState.RemainingQueueSpace >= bufferSize)
+						{
+							ovr_SubmitControllerVibration(_session, ovrControllerType_RTouch, &bufferX);
+						}	
+					}
+				}
 				else
 				{
 					gameEnd = true;
 					cout << "Game End: " << getCorrect() << endl;
+					cout << "---------------------------------" << endl;
 					setCorrect();
+					ovr_SetControllerVibration(_session, ovrControllerType_RTouch, 0.2f, 1);
+					ovr_SetControllerVibration(_session, ovrControllerType_LTouch, 0.2f, 1);
 				}
 			}
 		});
+
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		ovr_CommitTextureSwapChain(_session, _eyeTexture);
@@ -696,7 +750,8 @@ protected:
 	virtual void setLevel(int level) = 0;
 	virtual int getCorrect() = 0;
 	virtual void setCorrect() = 0;
-	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
+	virtual void incCorrect() = 0;
+	virtual bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -839,20 +894,6 @@ public:
 					}
 				}
 			}
-			/*for (unsigned int z = 0; z < GRID_SIZE; ++z) {
-				for (unsigned int y = 0; y < GRID_SIZE; ++y) {
-					for (unsigned int x = 0; x < GRID_SIZE; ++x) {
-						int xpos = (x - (GRID_SIZE / 2)) * 2;
-						int ypos = (y - (GRID_SIZE / 2)) * 2;
-						int zpos = (z - (GRID_SIZE / 2)) * 2;
-						vec3 relativePosition = vec3(xpos, ypos, zpos);
-						if (relativePosition == vec3(0)) {
-							continue;
-						}
-						instance_positions.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
-					}
-				}
-			}*/
 
 			Context::Bound(Buffer::Target::Array, instances).Data(instance_positions);
 			instanceCount = (GLuint)instance_positions.size();
@@ -997,12 +1038,13 @@ protected:
 	}
 
 	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) override {
+	bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) override {
 		
 		//cubeScene->render(projection, glm::inverse(headPose));
 		//controller->render(projection, glm::inverse(headPose), rHandPos);
 		myScene->draw(glm::inverse(headPose), projection);
-		myScene->drawCursor(glm::inverse(headPose), projection, rHandPos, trigState);
+		return myScene->drawCursor(glm::inverse(headPose), projection, rHandPos, trigState);
+		//return myScene->touched;
 	}
 
 	int getCorrect()
@@ -1013,6 +1055,11 @@ protected:
 	void setCorrect()
 	{
 		myScene->counter = 0;
+	}
+
+	void incCorrect()
+	{
+		myScene->counter += 1;
 	}
 
 	void setLevel(int level)
