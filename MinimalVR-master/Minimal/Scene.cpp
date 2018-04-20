@@ -38,7 +38,12 @@ Scene::Scene()
 			}
 
 	counter = 0;
-	randomEasy();
+	level = 0;
+	touched = false;
+	if (level == 0)
+		randomEasy();
+	else if (level == 1)
+		randomMedium();
 }
 
 void Scene::draw(glm::mat4 V, glm::mat4 P)
@@ -48,7 +53,7 @@ void Scene::draw(glm::mat4 V, glm::mat4 P)
 	//for (auto M : instances)
 	{
 		// normalize
-		sphere->Draw(program, instances[i], V, P, colors[i]);// glm::normalize(glm::vec3(abs(M[3][0]), abs(M[3][1]), abs(M[3][2]))));
+		sphere->Draw(program, M * instances[i], V, P, colors[i]);// glm::normalize(glm::vec3(abs(M[3][0]), abs(M[3][1]), abs(M[3][2]))));
 	}
 }
 
@@ -59,10 +64,22 @@ void Scene::drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigSt
 	if (trigState)
 	{
 		cursor->Draw(program, cursorM, V, P, cursorColor);
-		testIntersection(rHandPos, V, P);
+		if (testIntersection(rHandPos, V, P))
+		{
+			if (touched)
+			{
+				//cout << "Got it: " << counter << endl;
+				counter++;
+			}
+
+			if (level == 0)
+				randomEasy();
+			else if (level == 1)
+				randomMedium();
+		}
 	}
 	else
-		cursor->Draw(program, cursorM, V, P, glm::vec3(0.0f));
+		cursor->Draw(program, cursorM, V, P, cursorColor);
 }
 
 void Scene::drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P)
@@ -75,35 +92,29 @@ void Scene::drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 		popcorn->Draw(program, T * popcorns[i], V, P, colors[highlight]);
 	}
 
-	//// Wait
-	//clock_t start = clock();
-	//clock_t end = clock();
-	//while ((end - start) / CLOCKS_PER_SEC < 3.0)
-	//{
-	//	end = clock();
-	//	//cout << (start - end) / CLOCKS_PER_SEC << endl;
-	//}
-
 	// Reshuffle
-	randomEasy();
+	//randomEasy();
 }
 
-void Scene::testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P)
+bool Scene::testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P)
 {
-	glm::vec3 center(instances[highlight][3]);
-	if (glm::length(center - rHandPos) < radius)
+	glm::vec3 center(M * instances[highlight][3]);
+	if (glm::length(center - rHandPos) < radius && !touched)
 	{
 		// Pop			
-		drawPopcorns(instances[highlight], V, P);
+		//drawPopcorns(instances[highlight], V, P);
 
 		//instances.erase(instances.begin() + i);
 		//colors.erase(colors.begin() + i);
+		//counter++;
+		touched = true;
+		return true;
 	}
+	return false;
 }
 
 void Scene::randomEasy()
 {
-	++counter;
 	vector<int> red;
 	vector<int> green;
 	vector<int> blue;
@@ -131,4 +142,35 @@ void Scene::randomEasy()
 			colors.push_back(factor * glm::vec3((float)red[i], (float)green[i], (float)blue[i]));
 	}
 	cursorColor = colors[highlight];
+	touched = false;
+
+}
+
+void Scene::randomMedium()
+{
+	vector<int> red;
+	vector<int> green;
+	vector<int> blue;
+
+	for (int i = 0; i < 125; i++)
+	{
+		red.push_back(i);
+		green.push_back(i);
+		blue.push_back(i);
+	}
+	random_shuffle(red.begin(), red.end());
+	random_shuffle(green.begin(), green.end());
+	random_shuffle(blue.begin(), blue.end());
+
+	float factor = 1.0f / 124.0f;
+	srand(time(NULL));
+	highlight = rand() % 125;
+
+	colors.clear();
+	for (int i = 0; i < 125; i++)
+	{
+		colors.push_back(factor * glm::vec3((float)red[i], (float)green[i], (float)blue[i]));
+	}
+	cursorColor = colors[highlight];
+	touched = false;
 }

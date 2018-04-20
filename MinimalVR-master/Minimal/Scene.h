@@ -10,11 +10,15 @@ public:
 	void drawCursor(glm::mat4 V, glm::mat4 P, glm::vec3 rHandPos, bool trigState);
 	void drawPopcorns(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 
-	void testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P);
+	bool testIntersection(glm::vec3 rHandPos, glm::mat4 V, glm::mat4 P);
 
 	void randomEasy();
+	void randomMedium();
+	void randomHard();
 
 	int counter;
+	int level;
+	glm::mat4 M;
 
 private:
 	GLuint program;
@@ -34,4 +38,5 @@ private:
 	vector<glm::vec3> pcolors;
 
 	int highlight;
+	bool touched;
 };

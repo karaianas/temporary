@@ -446,6 +446,7 @@ private:
 	bool gameStart;
 	bool gameEnd;
 	clock_t stime;
+	int level;
 
 public:
 
@@ -541,6 +542,7 @@ protected:
 
 		gameStart = false;
 		gameEnd = false;
+		level = 0;
 	}
 
 	void onKey(int key, int scancode, int action, int mods) override {
@@ -576,6 +578,7 @@ protected:
 								// ovrVector3f  Position;
 		handPoses[0] = trackState.HandPoses[0].ThePose;
 		handPoses[1] = trackState.HandPoses[1].ThePose;
+
 		ovrVector3f handPosition[2];
 		handPosition[0] = handPoses[0].Position;
 		handPosition[1] = handPoses[1].Position;
@@ -583,6 +586,26 @@ protected:
 		//std::cerr << "left hand position  = " << handPosition[ovrHand_Left].x << ", " << handPosition[ovrHand_Left].y << ", " << handPosition[ovrHand_Left].z << std::endl;
 		//std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
 		
+		// Move
+		glm::mat4 T(1.0f);
+		T[3] = glm::vec4(handPosition[0].x, handPosition[0].y, handPosition[0].z, 1.0f);
+
+		glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
+
+		/*R[0][0] = 1 - 2 * pow(y, 2) - 2 * pow(z, 2);
+		R[0][1] = 2 * x * y + 2 * z * w;
+		R[0][2] = 2 * x * z - 2 * y * w;
+
+		R[1][0] = 2 * x * y - 2 * z * w;
+		R[1][1] = 1 - 2 * pow(x, 2) - 2 * pow(z, 2);
+		R[1][2] = 2 * y *  +2 * x * w;
+		
+		R[2][0] = 2 * x * z + 2 * y * w;
+		R[2][1] = 2 * y * z - 2 * x * w;
+		R[2][2] = 1 - 2 * pow(x, 2) - 2 * pow(y, 2);*/
+
+		setModel(T * R);
+
 		// Trigger
 		ovrInputState inputState;
 		bool trigState = false;
@@ -590,11 +613,16 @@ protected:
 		{
 			if (inputState.Buttons & ovrButton_A)
 			{
-				// Handle A button being pressed
+				// Change level
+				setLevel(1);
 			}
-			if (inputState.IndexTrigger[ovrHand_Right] > 0.5f)
+			if (inputState.Buttons & ovrButton_B)
 			{
-				// Handle hand grip...
+				// Change level
+				setLevel(2);
+			}
+			if (inputState.IndexTrigger[ovrHand_Right] > 0.7f)
+			{
 				//cout << "Trig " << inputState.IndexTrigger[ovrHand_Right] << endl;
 				trigState = true;
 				if (!gameStart)
@@ -602,6 +630,8 @@ protected:
 					cout << "Game Start" << endl;
 					stime = clock();
 					gameStart = true;
+
+					//ovr_SetControllerVibration(_session, ovrControllerType_RTouch, 0.2f, 1);
 				}
 
 				if (gameEnd)
@@ -662,6 +692,8 @@ protected:
 
 	}
 
+	virtual void setModel(glm::mat4 M) = 0;
+	virtual void setLevel(int level) = 0;
 	virtual int getCorrect() = 0;
 	virtual void setCorrect() = 0;
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
@@ -981,6 +1013,16 @@ protected:
 	void setCorrect()
 	{
 		myScene->counter = 0;
+	}
+
+	void setLevel(int level)
+	{
+		myScene->level = level;
+	}
+
+	void setModel(glm::mat4 M)
+	{
+		myScene->M = M;
 	}
 };
 
