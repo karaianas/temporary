@@ -1,20 +1,15 @@
 /************************************************************************************
-
 Authors     :   Bradley Austin Davis <bdavis@saintandreas.org>
 Copyright   :   Copyright Brad Davis. All Rights reserved.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
 http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 ************************************************************************************/
 
 
@@ -63,6 +58,7 @@ using glm::quat;
 
 // My implementation
 #include "Scene.h"
+#include "Calibration.h"
 #include <time.h>
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
@@ -444,14 +440,14 @@ private:
 
 	// My implementation
 
-	clock_t stime;
-	int level;
+	//clock_t stime;
+	//int level;
 
-	bool gameStart;
-	bool gameEnd;
-	bool levelChange;
-	bool moveChange;
-	bool resultTest;
+	//bool gameStart;
+	//bool gameEnd;
+	//bool levelChange;
+	//bool moveChange;
+	//bool resultTest;
 
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
@@ -548,12 +544,12 @@ protected:
 		}
 		glGenFramebuffers(1, &_mirrorFbo);
 
-		gameStart = false;
-		gameEnd = false;
-		level = 0;
-		levelChange = false;
-		moveChange = false;
-		resultTest = false;
+		//gameStart = false;
+		//gameEnd = false;
+		//level = 0;
+		//levelChange = false;
+		//moveChange = false;
+		//resultTest = false;
 
 		// Haptic
 		bufferSize = 256;
@@ -614,79 +610,11 @@ protected:
 		bool trigState = false;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
-			if (inputState.Buttons & ovrButton_A)
-			{
-				if (!levelChange)
-				{
-					levelChange = true;
-					if (level == 0)
-						level = 1;
-					else if (level == 1)
-						level = 2;
-					else if (level == 2)
-						level = 3;
-					else if (level == 3)
-						level = 0;
-					setLevel(level);
-					cout << "Level: " << level << endl;
-				}
-			}
-			else
-				levelChange = false;
-
-			if (inputState.HandTrigger[ovrHand_Left] > 0.7f && !moveChange)
-			{
-				moveChange = true;
-				// Move
-				glm::mat4 T(1.0f);
-				T[3] = glm::vec4(handPosition[0].x, handPosition[0].y, handPosition[0].z, 1.0f);
-
-				glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
-
-				setModel(T * R);
-			}
-			else
-			{
-				moveChange = false;
-			}
-			//else
-			//{
-			//	glm::mat4 R = glm::toMat4(glm::quat(handPoses[0].Orientation.w, handPoses[0].Orientation.x, handPoses[0].Orientation.y, handPoses[0].Orientation.z));
-
-			//	//R_prev = R * R_prev;
-			//	setModel(R);
-			//}
-			if (inputState.IndexTrigger[ovrHand_Right] > 0.7f)
-			{
-				trigState = true;
-				if (!gameStart)
-				{
-					cout << "---------------------------------" << endl;
-					cout << "Game Start" << endl;
-					level = 0;
-					setLevel(level);
-					stime = clock();
-					gameStart = true;
-				}
-
-				if (gameEnd)
-				{
-					gameEnd = false;
-					cout << "---------------------------------" << endl;
-					cout << "Game Start" << endl;
-					level = 0;
-					setLevel(level);
-					stime = clock();
-					gameStart = true;
-				}
-			}
-			else
-				trigState = false;
+			// Touch controller support
 		}
 
-		
-		// Add controller support -------------------------------------------------------------------------------------------------
 
+		
 		ovrPosef eyePoses[2];
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
 
@@ -701,7 +629,11 @@ protected:
 			const auto& vp = _sceneLayer.Viewport[eye];
 			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
 			_sceneLayer.RenderPose[eye] = eyePoses[eye];
-			if (gameStart && !gameEnd)
+
+			// Rendering
+			renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]));
+
+			/*if (gameStart && !gameEnd)
 			{
 				if ((clock() - stime) / CLOCKS_PER_SEC < 60)
 				{
@@ -716,7 +648,7 @@ protected:
 						if (playbackState.RemainingQueueSpace >= bufferSize)
 						{
 							ovr_SubmitControllerVibration(_session, ovrControllerType_RTouch, &bufferX);
-						}	
+						}
 					}
 				}
 				else
@@ -728,7 +660,7 @@ protected:
 					ovr_SetControllerVibration(_session, ovrControllerType_RTouch, 0.2f, 1);
 					ovr_SetControllerVibration(_session, ovrControllerType_LTouch, 0.2f, 1);
 				}
-			}
+			}*/
 		});
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
@@ -746,12 +678,13 @@ protected:
 
 	}
 
-	virtual void setModel(glm::mat4 M) = 0;
+	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos) = 0;
+	/*virtual void setModel(glm::mat4 M) = 0;
 	virtual void setLevel(int level) = 0;
 	virtual int getCorrect() = 0;
 	virtual void setCorrect() = 0;
 	virtual void incCorrect() = 0;
-	virtual bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;
+	virtual bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;*/
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -801,16 +734,12 @@ namespace Attribute {
 
 static const char * VERTEX_SHADER = R"SHADER(
 #version 410 core
-
 uniform mat4 ProjectionMatrix = mat4(1);
 uniform mat4 CameraMatrix = mat4(1);
-
 layout(location = 0) in vec4 Position;
 layout(location = 2) in vec3 Normal;
 layout(location = 5) in mat4 InstanceTransform;
-
 out vec3 vertNormal;
-
 void main(void) {
    mat4 ViewXfm = CameraMatrix * InstanceTransform;
    //mat4 ViewXfm = CameraMatrix;
@@ -821,10 +750,8 @@ void main(void) {
 
 static const char * FRAGMENT_SHADER = R"SHADER(
 #version 410 core
-
 in vec3 vertNormal;
 out vec4 fragColor;
-
 void main(void) {
     vec3 color = vertNormal;
     if (!all(equal(color, abs(color)))) {
@@ -1007,14 +934,12 @@ public:
 
 // An example application that renders a simple cube
 class ExampleApp : public RiftApp {
-	//std::shared_ptr<ColorCubeScene> cubeScene;
-	//std::shared_ptr<ControllerCube> controller;
 
 	// My implementation
-	std::shared_ptr<Scene> myScene;
-	clock_t itime;
-	clock_t ftime;
-	//Scene* myScene;
+	std::shared_ptr<Calibration> cal;
+	//std::shared_ptr<Scene> myScene;
+	//clock_t itime;
+	//clock_t ftime;
 
 public:
 	ExampleApp() { }
@@ -1025,10 +950,9 @@ protected:
 		glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
-		//cubeScene = std::shared_ptr<ColorCubeScene>(new ColorCubeScene());
-		//controller = std::shared_ptr<ControllerCube>(new ControllerCube());
-		myScene = std::shared_ptr<Scene>(new Scene());
-		//myScene = new Scene();
+
+		cal = std::shared_ptr<Calibration>(new Calibration());
+		//myScene = std::shared_ptr<Scene>(new Scene());
 
 	}
 
@@ -1037,9 +961,14 @@ protected:
 		//controller.reset();
 	}
 
+	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos) override {
+		cal->draw(glm::inverse(headpos), projection);
+		//cout << "?" << endl;
+	}
+	/*
 	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
 	bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) override {
-		
+
 		//cubeScene->render(projection, glm::inverse(headPose));
 		//controller->render(projection, glm::inverse(headPose), rHandPos);
 		myScene->draw(glm::inverse(headPose), projection);
@@ -1071,11 +1000,12 @@ protected:
 	{
 		myScene->M = M;
 	}
+	*/
 };
 
 // Execute our example class
 //int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
 	int result = -1;
 	try {
 		if (!OVR_SUCCESS(ovr_Initialize(nullptr))) {
