@@ -445,6 +445,8 @@ private:
 
 	bool cycleX;
 	int cycleXMode;
+	bool cycleA;
+	int cycleAMode;
 
 	bool sizeChange;
 	float cubeSize;
@@ -546,6 +548,8 @@ protected:
 
 		cycleX = false;
 		cycleXMode = 0;
+		cycleA = false;
+		cycleAMode = 0;
 
 		sizeChange = false;
 		cubeSize = 0.3f;
@@ -623,6 +627,18 @@ protected:
 			else
 				cycleX = false;
 
+			if (inputState.Buttons & ovrButton_A)
+			{
+				if (!cycleA)
+				{
+					cycleA = true;
+					cycleAMode += 1;
+					cycleAMode %= 4;
+				}
+			}
+			else
+				cycleA = false;
+
 			//cout << inputState.Thumbstick[ovrHand_Left].x << endl;
 			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
 			{
@@ -664,6 +680,7 @@ protected:
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		
 		ovr::for_each_eye([&](ovrEyeType eye) {
 
 			int eye_l = 0;
@@ -681,25 +698,51 @@ protected:
 			}
 
 			// Left
-			if (eye == 0)
+			if (eye == 0 )
 			{
-				const auto& vp = _sceneLayer.Viewport[eye];
-				glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-				_sceneLayer.RenderPose[eye] = eyePoses[eye];
+				if (cycleAMode == 0 || cycleAMode == 1)
+				{
+					const auto& vp = _sceneLayer.Viewport[eye];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-				// Rendering
-				renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+					// Rendering
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+				}
+				else if (cycleAMode == 3)
+				{
+					const auto& vp = _sceneLayer.Viewport[1];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[1] = eyePoses[1];
+
+					// Rendering
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+				}
 			}
+
 			// Right
-			else
+			if (eye == 1)
 			{
-				const auto& vp = _sceneLayer.Viewport[eye];
-				glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-				_sceneLayer.RenderPose[eye] = eyePoses[eye];
+				if (cycleAMode == 0 || cycleAMode == 2)
+				{
+					const auto& vp = _sceneLayer.Viewport[eye];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-				// Rendering
-				renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+					// Rendering
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+				}
+				else if (cycleAMode == 3)
+				{
+					const auto& vp = _sceneLayer.Viewport[0];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[0] = eyePoses[0];
+
+					// Rendering
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+				}
 			}
+
 
 			/*if (gameStart && !gameEnd)
 			{
@@ -749,7 +792,6 @@ protected:
 	
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
-	virtual void resetCubeSize() = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -861,10 +903,6 @@ protected:
 
 	void changeCubeSize(float cubeSize){
 		cal->changeCubeSize(cubeSize);
-	}
-
-	void resetCubeSize() {
-		cal->resetCubeSize();
 	}
 };
 
