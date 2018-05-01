@@ -548,7 +548,7 @@ protected:
 		cycleXMode = 0;
 
 		sizeChange = false;
-		cubeSize = 1.0f;
+		cubeSize = 0.3f;
 
 		// Haptic
 		bufferSize = 256;
@@ -626,24 +626,30 @@ protected:
 			//cout << inputState.Thumbstick[ovrHand_Left].x << endl;
 			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
 			{
-				cubeSize += 0.1f;
-				cubeSize = glm::clamp(cubeSize, 0.01f, 5.0f);
-				cout << "Bigger!" << cubeSize << endl;
+				cubeSize += 0.01f;
+				if (cubeSize > 0.5f)
+					cubeSize = 0.5f;
+				//cubeSize = glm::clamp(cubeSize, 0.01f, 0.5f);
+				//cout << "Bigger!" << cubeSize << endl;
 				changeCubeSize(cubeSize);
 
 			}
 			else if (inputState.Thumbstick[ovrHand_Left].x < -0.9f)
 			{
 
-				cubeSize -= 0.1f;
-				cubeSize = glm::clamp(cubeSize, 0.01f, 5.0f);
-				cout << "Smaller!" << cubeSize << endl;
+				cubeSize -= 0.01f;
+				if (cubeSize < 0.01f)
+					cubeSize = 0.01f;
+				//cubeSize = glm::clamp(cubeSize, 0.05f, 0.5f);
+				//cout << "Smaller!" << cubeSize << endl;
 				changeCubeSize(cubeSize);
 			}
 
 			if (inputState.Buttons & ovrButton_LThumb)
 			{
-				cout << "Reset!" << endl;
+				//cout << "Reset!" << endl;
+				cubeSize = 0.3f;
+				changeCubeSize(cubeSize);
 			}
 		}
 		
@@ -743,6 +749,7 @@ protected:
 	
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
+	virtual void resetCubeSize() = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -854,6 +861,10 @@ protected:
 
 	void changeCubeSize(float cubeSize){
 		cal->changeCubeSize(cubeSize);
+	}
+
+	void resetCubeSize() {
+		cal->resetCubeSize();
 	}
 };
 

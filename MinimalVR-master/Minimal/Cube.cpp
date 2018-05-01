@@ -5,7 +5,7 @@ using namespace std;
 Cube::Cube()
 {
 	toWorld = glm::mat4(1.0f);
-	scaleFactor = 1.0f;
+	scaleFactor = 0.3f;
 	
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -61,17 +61,12 @@ void Cube::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 
 void Cube::update(float cubeSize)
 {
-	scaleFactor *= 0.9f;
-	if (scaleFactor < 0.01f)
-	{
-		scaleFactor = 0.01f;
-	}
-	else if (scaleFactor > 5.0f)
-	{
-		scaleFactor = 5.0f;
-	}
-	else
-		toWorld = toWorld * glm::scale(glm::mat4(1.0f), glm::vec3(0.9f));
+	float delta = cubeSize - scaleFactor;
+	//delta = delta > 0 ? delta : -delta;
+	delta = delta / scaleFactor + 1.0f;
+	scaleFactor = cubeSize;
+	//cout << "CubeSize: " << cubeSize << " Delta: " << delta << endl;
+	toWorld = toWorld * glm::scale(glm::mat4(1.0f), glm::vec3(delta));
 }
 
 GLuint Cube::loadTexture(vector<const char*> faces)
