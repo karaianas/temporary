@@ -1,11 +1,11 @@
-#include "Cube.h"
+#include "Skybox.h"
 
 using namespace std;
 
-Cube::Cube()
+Skybox::Skybox()
 {
 	toWorld = glm::mat4(1.0f);
-	
+
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -13,9 +13,9 @@ Cube::Cube()
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	
+
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
 
@@ -25,9 +25,10 @@ Cube::Cube()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindVertexArray(0);
+
 }
 
-Cube::~Cube()
+Skybox::~Skybox()
 {
 	// Delete previously generated buffers. Note that forgetting to do this can waste GPU memory in a 
 	// large project! This could crash the graphics driver due to memory leaks, or slow down application performance!
@@ -36,14 +37,19 @@ Cube::~Cube()
 	glDeleteBuffers(1, &EBO);
 }
 
-void Cube::draw(GLuint program, glm::mat4 V, glm::mat4 P)
+void Skybox::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 {
 	//glDepthMask(GL_FALSE);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
+	glm::mat4 temp = V;
+	temp[3][0] = 0;
+	temp[3][1] = 0;
+	temp[3][2] = 0;
+
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &temp[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &P[0][0]);
 	//glUniform1i(glGetUniformLocation(program, "skybox"), 0);
 
@@ -51,14 +57,14 @@ void Cube::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texID);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-	
+
 	//glDepthMask(GL_TRUE);
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(0);
 }
 
-GLuint Cube::loadTexture(vector<const char*> faces)
+GLuint Skybox::loadTexture(vector<const char*> faces)
 {
 	GLuint textureID;
 	glGenTextures(1, &textureID);
@@ -88,7 +94,7 @@ GLuint Cube::loadTexture(vector<const char*> faces)
 	return textureID;
 }
 
-unsigned char* Cube::loadPPM(const char* filename, int& width, int& height)
+unsigned char* Skybox::loadPPM(const char* filename, int& width, int& height)
 {
 	const int BUFSIZE = 128;
 	FILE* fp;

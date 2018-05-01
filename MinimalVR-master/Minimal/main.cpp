@@ -443,11 +443,10 @@ private:
 	//clock_t stime;
 	//int level;
 
-	//bool gameStart;
-	//bool gameEnd;
-	//bool levelChange;
-	//bool moveChange;
-	//bool resultTest;
+	bool cycleX;
+	int cycleXMode;
+
+	bool sizeChange;
 
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
@@ -544,12 +543,10 @@ protected:
 		}
 		glGenFramebuffers(1, &_mirrorFbo);
 
-		//gameStart = false;
-		//gameEnd = false;
-		//level = 0;
-		//levelChange = false;
-		//moveChange = false;
-		//resultTest = false;
+		cycleX = false;
+		cycleXMode = 0;
+
+		sizeChange = false;
 
 		// Haptic
 		bufferSize = 256;
@@ -607,13 +604,39 @@ protected:
 		//std::cerr << "right hand position = " << handPosition[ovrHand_Right].x << ", " << handPosition[ovrHand_Right].y << ", " << handPosition[ovrHand_Right].z << std::endl;
 
 		ovrInputState inputState;
-		bool trigState = false;
+		//bool trigState = false;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
 			// Touch controller support
+			if (inputState.Buttons & ovrButton_X)
+			{
+				if (!cycleX)
+				{
+					cycleX = true;
+					cycleXMode += 1;
+					cycleXMode %= 3;
+					//cout << cycleXMode << endl;
+				}
+			}
+			else
+				cycleX = false;
+
+			//cout << inputState.Thumbstick[ovrHand_Left].x << endl;
+			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
+			{
+				cout << "Bigger!" << endl;
+
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].x < -0.9f)
+			{
+				cout << "Smaller!" << endl;
+			}
+
+			if (inputState.Buttons & ovrButton_LThumb)
+			{
+				cout << "Reset!" << endl;
+			}
 		}
-
-
 		
 		ovrPosef eyePoses[2];
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
@@ -625,13 +648,43 @@ protected:
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		ovr::for_each_eye([&](ovrEyeType eye) {
-			const auto& vp = _sceneLayer.Viewport[eye];
-			glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-			_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
-			// Rendering
-			renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]));
+		ovr::for_each_eye([&](ovrEyeType eye) {
+
+			int eye_l = 0;
+			int eye_r = 1;
+			bool obj = true;
+
+			if (cycleXMode == 1)
+			{
+				obj = false;
+			}
+			else if (cycleXMode == 2)
+			{
+				obj = false;
+				eye_r = eye_l;
+			}
+
+			// Left
+			if (eye == 0)
+			{
+				const auto& vp = _sceneLayer.Viewport[eye];
+				glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+				_sceneLayer.RenderPose[eye] = eyePoses[eye];
+
+				// Rendering
+				renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+			}
+			// Right
+			else
+			{
+				const auto& vp = _sceneLayer.Viewport[eye];
+				glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+				_sceneLayer.RenderPose[eye] = eyePoses[eye];
+
+				// Rendering
+				renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+			}
 
 			/*if (gameStart && !gameEnd)
 			{
@@ -678,13 +731,7 @@ protected:
 
 	}
 
-	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos) = 0;
-	/*virtual void setModel(glm::mat4 M) = 0;
-	virtual void setLevel(int level) = 0;
-	virtual int getCorrect() = 0;
-	virtual void setCorrect() = 0;
-	virtual void incCorrect() = 0;
-	virtual bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) = 0;*/
+	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -961,46 +1008,9 @@ protected:
 		//controller.reset();
 	}
 
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos) override {
-		cal->draw(glm::inverse(headpos), projection);
-		//cout << "?" << endl;
+	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) override {
+		cal->draw(glm::inverse(headpos), projection, eye, obj);
 	}
-	/*
-	//void renderScene(const glm::mat4 & projection, const glm::mat4 & headPose) override {
-	bool renderScene(const glm::mat4 & projection, const glm::mat4 & headPose, glm::vec3 rHandPos, bool trigState) override {
-
-		//cubeScene->render(projection, glm::inverse(headPose));
-		//controller->render(projection, glm::inverse(headPose), rHandPos);
-		myScene->draw(glm::inverse(headPose), projection);
-		return myScene->drawCursor(glm::inverse(headPose), projection, rHandPos, trigState);
-		//return myScene->touched;
-	}
-
-	int getCorrect()
-	{
-		return myScene->counter;
-	}
-
-	void setCorrect()
-	{
-		myScene->counter = 0;
-	}
-
-	void incCorrect()
-	{
-		myScene->counter += 1;
-	}
-
-	void setLevel(int level)
-	{
-		myScene->level = level;
-	}
-
-	void setModel(glm::mat4 M)
-	{
-		myScene->M = M;
-	}
-	*/
 };
 
 // Execute our example class

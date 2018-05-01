@@ -33,6 +33,9 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -40,6 +43,12 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\model.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\skybox.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\skybox.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -63,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
