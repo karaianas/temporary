@@ -14,6 +14,7 @@ public:
 	Calibration();
 
 	void draw(glm::mat4 V, glm::mat4 P, int eye, bool obj);
+	void changeCubeSize(float cubeSize);
 
 private:
 	GLuint program;

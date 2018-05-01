@@ -78,3 +78,9 @@ void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
 	//skybox_l->draw(program, V, P);
 	//skybox_r->draw(program, V, P);
 }
+
+void Calibration::changeCubeSize(float cubeSize)
+{
+	cube->update(cubeSize);
+	cube2->update(cubeSize);
+}

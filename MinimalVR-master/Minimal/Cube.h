@@ -16,8 +16,10 @@ public:
 	~Cube();
 
 	glm::mat4 toWorld;
+	float scaleFactor;
 
 	void draw(GLuint program, glm::mat4 V, glm::mat4 P);
+	void update(float cubeSize);
 
 	// These variables are needed for the shader program
 	GLuint VBO, VAO, EBO;

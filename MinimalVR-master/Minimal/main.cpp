@@ -447,6 +447,7 @@ private:
 	int cycleXMode;
 
 	bool sizeChange;
+	float cubeSize;
 
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
@@ -547,6 +548,7 @@ protected:
 		cycleXMode = 0;
 
 		sizeChange = false;
+		cubeSize = 1.0f;
 
 		// Haptic
 		bufferSize = 256;
@@ -624,12 +626,19 @@ protected:
 			//cout << inputState.Thumbstick[ovrHand_Left].x << endl;
 			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
 			{
-				cout << "Bigger!" << endl;
+				cubeSize += 0.1f;
+				cubeSize = glm::clamp(cubeSize, 0.01f, 5.0f);
+				cout << "Bigger!" << cubeSize << endl;
+				changeCubeSize(cubeSize);
 
 			}
 			else if (inputState.Thumbstick[ovrHand_Left].x < -0.9f)
 			{
-				cout << "Smaller!" << endl;
+
+				cubeSize -= 0.1f;
+				cubeSize = glm::clamp(cubeSize, 0.01f, 5.0f);
+				cout << "Smaller!" << cubeSize << endl;
+				changeCubeSize(cubeSize);
 			}
 
 			if (inputState.Buttons & ovrButton_LThumb)
@@ -731,7 +740,9 @@ protected:
 
 	}
 
+	
 	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) = 0;
+	virtual void changeCubeSize(float cubeSize) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -808,177 +819,6 @@ void main(void) {
 }
 )SHADER";
 
-// a class for encapsulating building and rendering an RGB cube
-struct ColorCubeScene {
-
-	// Program
-	oglplus::shapes::ShapeWrapper cube;
-	oglplus::Program prog;
-	oglplus::VertexArray vao;
-	GLuint instanceCount;
-	oglplus::Buffer instances;
-
-	// VBOs for the cube's vertices and normals
-
-	const unsigned int GRID_SIZE{ 5 };
-
-public:
-	//ColorCubeScene() : cube({ "Position", "Normal" }, oglplus::shapes::Cube()) {
-	ColorCubeScene() : cube({ "Position", "Normal" }, oglplus::shapes::Cube(0.07f, 0.07f, 0.07f)) {
-		using namespace oglplus;
-		try {
-			// attach the shaders to the program
-			prog.AttachShader(
-				FragmentShader()
-				.Source(GLSLSource(String(FRAGMENT_SHADER)))
-				.Compile()
-			);
-			prog.AttachShader(
-				VertexShader()
-				.Source(GLSLSource(String(VERTEX_SHADER)))
-				.Compile()
-			);
-			prog.Link();
-		}
-		catch (ProgramBuildError & err) {
-			FAIL((const char*)err.what());
-		}
-
-		// link and use it
-		prog.Use();
-
-		vao = cube.VAOForProgram(prog);
-		vao.Bind();
-		// Create a cube of cubes
-		{
-			std::vector<mat4> instance_positions;
-			float scaleFactor = 0.14f;
-			float offset = scaleFactor * float(GRID_SIZE) / 2.0f;
-			for (unsigned int z = 0; z < GRID_SIZE; ++z) {
-				for (unsigned int y = 0; y < GRID_SIZE; ++y) {
-					for (unsigned int x = 0; x < GRID_SIZE; ++x) {
-						float xpos = float(x) * scaleFactor - offset;
-						float ypos = float(y) * scaleFactor - offset;
-						float zpos = float(z) * scaleFactor - offset - 0.5f;
-						vec3 relativePosition = vec3(xpos, ypos, zpos);
-						if (relativePosition == vec3(0)) {
-							continue;
-						}
-						instance_positions.push_back(glm::translate(glm::mat4(1.0f), relativePosition));
-					}
-				}
-			}
-
-			Context::Bound(Buffer::Target::Array, instances).Data(instance_positions);
-			instanceCount = (GLuint)instance_positions.size();
-			int stride = sizeof(mat4);
-			for (int i = 0; i < 4; ++i) {
-				VertexArrayAttrib instance_attr(prog, Attribute::InstanceTransform + i);
-				size_t offset = sizeof(vec4) * i;
-				instance_attr.Pointer(4, DataType::Float, false, stride, (void*)offset);
-				instance_attr.Divisor(1);
-				instance_attr.Enable();
-			}
-		}
-	}
-
-	void render(const mat4 & projection, const mat4 & modelview) {
-		using namespace oglplus;
-		prog.Use();
-		Uniform<mat4>(prog, "ProjectionMatrix").Set(projection);
-		Uniform<mat4>(prog, "CameraMatrix").Set(modelview);
-		vao.Bind();
-		cube.Draw(instanceCount);
-	}
-};
-
-struct ControllerCube {
-
-	// Program
-	oglplus::shapes::ShapeWrapper cube;
-	oglplus::Program prog;
-	oglplus::VertexArray vao;
-	GLuint instanceCount;
-	oglplus::Buffer instances;
-
-	// VBOs for the cube's vertices and normals
-
-	//const unsigned int GRID_SIZE{ 5 };
-
-public:
-	ControllerCube() : cube({ "Position", "Normal" }, oglplus::shapes::Cube(0.11f, 0.11f, 0.11f)) {
-		using namespace oglplus;
-		try {
-			// attach the shaders to the program
-			prog.AttachShader(
-				FragmentShader()
-				.Source(GLSLSource(String(FRAGMENT_SHADER)))
-				.Compile()
-			);
-			prog.AttachShader(
-				VertexShader()
-				.Source(GLSLSource(String(VERTEX_SHADER)))
-				.Compile()
-			);
-			prog.Link();
-		}
-		catch (ProgramBuildError & err) {
-			FAIL((const char*)err.what());
-		}
-
-		// link and use it
-		prog.Use();
-
-		vao = cube.VAOForProgram(prog);
-		vao.Bind();
-		// Create a cube of cubes
-		{
-			std::vector<mat4> instance_positions;
-			instance_positions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));
-
-			Context::Bound(Buffer::Target::Array, instances).Data(instance_positions);
-			instanceCount = (GLuint)instance_positions.size();
-			int stride = sizeof(mat4);
-			for (int i = 0; i < 4; ++i) {
-				VertexArrayAttrib instance_attr(prog, Attribute::InstanceTransform + i);
-				size_t offset = sizeof(vec4) * i;
-				instance_attr.Pointer(4, DataType::Float, false, stride, (void*)offset);
-				instance_attr.Divisor(1);
-				instance_attr.Enable();
-			}
-		}
-	}
-
-	void render(const mat4 & projection, const mat4 & modelview, glm::vec3 rHandPos) {
-		using namespace oglplus;
-		prog.Use();
-		Uniform<mat4>(prog, "ProjectionMatrix").Set(projection);
-		Uniform<mat4>(prog, "CameraMatrix").Set(modelview);
-
-		vao = cube.VAOForProgram(prog);
-		vao.Bind();
-		// Create a cube of cubes
-		{
-			std::vector<mat4> instance_positions;
-			instance_positions.push_back(glm::translate(glm::mat4(1.0f), rHandPos));
-
-			Context::Bound(Buffer::Target::Array, instances).Data(instance_positions);
-			instanceCount = (GLuint)instance_positions.size();
-			int stride = sizeof(mat4);
-			for (int i = 0; i < 4; ++i) {
-				VertexArrayAttrib instance_attr(prog, Attribute::InstanceTransform + i);
-				size_t offset = sizeof(vec4) * i;
-				instance_attr.Pointer(4, DataType::Float, false, stride, (void*)offset);
-				instance_attr.Divisor(1);
-				instance_attr.Enable();
-			}
-		}
-
-		vao.Bind();
-		cube.Draw(instanceCount);
-	}
-};
-
 // An example application that renders a simple cube
 class ExampleApp : public RiftApp {
 
@@ -1010,6 +850,10 @@ protected:
 
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) override {
 		cal->draw(glm::inverse(headpos), projection, eye, obj);
+	}
+
+	void changeCubeSize(float cubeSize){
+		cal->changeCubeSize(cubeSize);
 	}
 };
 
