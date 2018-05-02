@@ -447,6 +447,8 @@ private:
 	int cycleXMode;
 	bool cycleA;
 	int cycleAMode;
+	bool cycleB;
+	int cycleBMode;
 
 	bool sizeChange;
 	float cubeSize;
@@ -550,6 +552,8 @@ protected:
 		cycleXMode = 0;
 		cycleA = false;
 		cycleAMode = 0;
+		cycleB = false;
+		cycleBMode = 0;
 
 		sizeChange = false;
 		cubeSize = 0.3f;
@@ -639,14 +643,23 @@ protected:
 			else
 				cycleA = false;
 
-			//cout << inputState.Thumbstick[ovrHand_Left].x << endl;
+			if (inputState.Buttons & ovrButton_B)
+			{
+				if (!cycleB)
+				{
+					cycleB = true;
+					cycleBMode += 1;
+					cycleBMode %= 4;
+				}
+			}
+			else
+				cycleB = false;
+
 			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
 			{
 				cubeSize += 0.01f;
 				if (cubeSize > 0.5f)
 					cubeSize = 0.5f;
-				//cubeSize = glm::clamp(cubeSize, 0.01f, 0.5f);
-				//cout << "Bigger!" << cubeSize << endl;
 				changeCubeSize(cubeSize);
 
 			}
@@ -656,14 +669,11 @@ protected:
 				cubeSize -= 0.01f;
 				if (cubeSize < 0.01f)
 					cubeSize = 0.01f;
-				//cubeSize = glm::clamp(cubeSize, 0.05f, 0.5f);
-				//cout << "Smaller!" << cubeSize << endl;
 				changeCubeSize(cubeSize);
 			}
 
 			if (inputState.Buttons & ovrButton_LThumb)
 			{
-				//cout << "Reset!" << endl;
 				cubeSize = 0.3f;
 				changeCubeSize(cubeSize);
 			}
@@ -742,7 +752,6 @@ protected:
 					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
 				}
 			}
-
 
 			/*if (gameStart && !gameEnd)
 			{
@@ -898,7 +907,11 @@ protected:
 	}
 
 	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) override {
-		cal->draw(glm::inverse(headpos), projection, eye, obj);
+		glm::mat4 temp = glm::inverse(headpos);
+		//temp[3][0] = 0.0f;
+		//temp[3][1] = 0.0f;
+		//temp[3][2] = 0.0f;
+		cal->draw(temp, projection, eye, obj);
 	}
 
 	void changeCubeSize(float cubeSize){
