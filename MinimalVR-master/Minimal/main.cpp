@@ -453,6 +453,10 @@ private:
 	bool sizeChange;
 	float cubeSize;
 
+	ovrPosef eyePoses[2];
+	ovrQuatf oriPrev;
+	ovrVector3f  posPrev;
+
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
 	int bufferSize;
@@ -678,9 +682,27 @@ protected:
 				changeCubeSize(cubeSize);
 			}
 		}
-		
-		ovrPosef eyePoses[2];
-		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
+
+		ovrPosef eyePoses_[2];
+		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses_, &_sceneLayer.SensorSampleTime);
+		if (cycleBMode == 0)
+		{
+			eyePoses[0] = eyePoses_[0];
+			eyePoses[1] = eyePoses_[1];
+		}
+		else if (cycleBMode == 1)
+		{
+			eyePoses[0].Orientation = eyePoses_[0].Orientation;
+			eyePoses[1].Orientation = eyePoses_[1].Orientation;
+		}
+		else if (cycleBMode == 2)
+		{
+			eyePoses[0].Position = eyePoses_[0].Position;
+			eyePoses[1].Position = eyePoses_[1].Position;
+		}
+		else
+		{
+		}
 
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
@@ -728,6 +750,10 @@ protected:
 					// Rendering
 					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
 				}
+				else
+				{
+					// Do nothing
+				}
 			}
 
 			// Right
@@ -750,6 +776,10 @@ protected:
 
 					// Rendering
 					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+				}
+				else 
+				{
+					// Do nothing
 				}
 			}
 
