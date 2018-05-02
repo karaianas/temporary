@@ -704,6 +704,11 @@ protected:
 		{
 		}
 
+		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
+		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
+		float IOD = lOffset - rOffset;
+		// cout << "l: " << lOffset << " r: " << rOffset << " IOD: " << IOD << endl;
+
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
 		GLuint curTexId;
