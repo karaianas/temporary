@@ -684,14 +684,12 @@ protected:
 				changeCubeSize(cubeSize);
 			}
 
-			// -----------------------------------------------------------------
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.9f)
 			{
 				// Increase IOD
 				IOD += 0.05f;
 				if (IOD > 0.3f)
 					IOD = 0.3f;
-
 			}
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.9f)
 			{
@@ -706,7 +704,6 @@ protected:
 				// Reset IOD
 				IOD = 0.0597519f;
 			}
-			// -----------------------------------------------------------------
 		}
 
 		// -----------------------------------------------------------------
@@ -735,8 +732,8 @@ protected:
 		// -----------------------------------------------------------------
 		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
 		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
-		//_viewScaleDesc.HmdToEyePose[0].Position.x = -1.0f;
-		//_viewScaleDesc.HmdToEyePose[1].Position.x = 1.0f;
+		_viewScaleDesc.HmdToEyePose[0].Position.x = IOD/2.0f;
+		_viewScaleDesc.HmdToEyePose[1].Position.x = -IOD/2.0f;
 		//float IOD_ = lOffset - rOffset;
 		//cout << "l: " << lOffset << " r: " << rOffset << " IOD: " << IOD_ << endl;
 		// -----------------------------------------------------------------
@@ -825,35 +822,6 @@ protected:
 					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 				}
 			}
-
-			/*if (gameStart && !gameEnd)
-			{
-				if ((clock() - stime) / CLOCKS_PER_SEC < 60)
-				{
-					resultTest = renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), \
-						glm::vec3(handPosition[ovrHand_Right].x, handPosition[ovrHand_Right].y, handPosition[ovrHand_Right].z), \
-						trigState);
-
-					if (resultTest)
-					{
-						ovrHapticsPlaybackState playbackState;
-						ovrResult result = ovr_GetControllerVibrationState(_session, ovrControllerType_RTouch, &playbackState);
-						if (playbackState.RemainingQueueSpace >= bufferSize)
-						{
-							ovr_SubmitControllerVibration(_session, ovrControllerType_RTouch, &bufferX);
-						}
-					}
-				}
-				else
-				{
-					gameEnd = true;
-					cout << "Game End: " << getCorrect() << endl;
-					cout << "---------------------------------" << endl;
-					setCorrect();
-					ovr_SetControllerVibration(_session, ovrControllerType_RTouch, 0.2f, 1);
-					ovr_SetControllerVibration(_session, ovrControllerType_LTouch, 0.2f, 1);
-				}
-			}*/
 		});
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
