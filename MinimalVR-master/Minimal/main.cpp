@@ -453,6 +453,7 @@ private:
 	bool sizeChange;
 	float cubeSize;
 	float IOD;
+	float dIOD;
 	ovrPosef eyePoses[2];
 	ovrQuatf oriPrev;
 	ovrVector3f  posPrev;
@@ -561,7 +562,12 @@ protected:
 
 		sizeChange = false;
 		cubeSize = 0.3f;
-		IOD = 0.0597519f;//------------------------------------------------------------------- Default value
+
+		// Default IOD
+		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
+		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
+		dIOD = rOffset - lOffset;
+		IOD = dIOD;
 
 		// Haptic
 		bufferSize = 256;
@@ -687,14 +693,14 @@ protected:
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.9f)
 			{
 				// Increase IOD
-				IOD += 0.05f;
+				IOD += 0.005f;
 				if (IOD > 0.3f)
 					IOD = 0.3f;
 			}
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.9f)
 			{
 				// Decrease IOD
-				IOD -= 0.05f;
+				IOD -= 0.005f;
 				if (IOD < -0.1f)
 					IOD = -0.1f;
 			}
@@ -702,7 +708,7 @@ protected:
 			if (inputState.Buttons & ovrButton_RThumb)
 			{
 				// Reset IOD
-				IOD = 0.0597519f;
+				IOD = dIOD;
 			}
 		}
 
@@ -729,14 +735,8 @@ protected:
 		//}
 		// -----------------------------------------------------------------
 
-		// -----------------------------------------------------------------
-		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
-		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
-		_viewScaleDesc.HmdToEyePose[0].Position.x = IOD/2.0f;
-		_viewScaleDesc.HmdToEyePose[1].Position.x = -IOD/2.0f;
-		//float IOD_ = lOffset - rOffset;
-		//cout << "l: " << lOffset << " r: " << rOffset << " IOD: " << IOD_ << endl;
-		// -----------------------------------------------------------------
+		_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD/2.0f;
+		_viewScaleDesc.HmdToEyePose[1].Position.x = IOD/2.0f;
 
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
