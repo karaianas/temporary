@@ -797,6 +797,7 @@ protected:
 					cycleI = true;
 					nframes++;
 					nframes %= 45;
+					//cout << "nframes: " << nframes << endl;
 				}
 				else
 					cycleI = false;
@@ -857,6 +858,7 @@ protected:
 			{
 				Q.push(glm::vec3(handPos));
 				sum += handPos;
+
 			}
 			else if (Q.size() == nframes)
 			{
