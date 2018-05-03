@@ -14,6 +14,7 @@ Calibration::Calibration()
 	cube2 = new Cube();
 	skybox_l = new Skybox();
 	skybox_r = new Skybox();
+	skybox_x = new Skybox();
 
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));
@@ -23,6 +24,7 @@ Calibration::Calibration()
 	cube2->toWorld = T * cube->toWorld;
 	skybox_l->toWorld = R * S2;
 	skybox_r->toWorld = R * S2;
+	skybox_x->toWorld = R * S2;
 
 	vector<const char*> faces;
 	faces.push_back("textures//vr_test_pattern.ppm");
@@ -51,6 +53,15 @@ Calibration::Calibration()
 	faces_r.push_back("textures//bear-stereo-cubemaps//right-ppm//pz.ppm");
 	faces_r.push_back("textures//bear-stereo-cubemaps//right-ppm//nz.ppm");
 	skybox_r->loadTexture(faces_r);
+
+	vector<const char*> faces_x;
+	faces_x.push_back("textures//room//px.ppm");
+	faces_x.push_back("textures//room//nx.ppm");
+	faces_x.push_back("textures//room//py.ppm");
+	faces_x.push_back("textures//room//ny.ppm");
+	faces_x.push_back("textures//room//pz.ppm");
+	faces_x.push_back("textures//room//nz.ppm");
+	skybox_x->loadTexture(faces_x);
 }
 
 void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
@@ -63,7 +74,7 @@ void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
 	else if (eye == 1)
 	{
 		glUseProgram(program_sky);
-		skybox_r->draw(program, V, P);
+		skybox_l->draw(program, V, P);
 	}
 
 	if (obj)
@@ -72,11 +83,6 @@ void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
 		cube->draw(program, V, P);
 		cube2->draw(program, V, P);
 	}
-
-
-	//glUseProgram(program_sky);
-	//skybox_l->draw(program, V, P);
-	//skybox_r->draw(program, V, P);
 }
 
 void Calibration::changeCubeSize(float cubeSize)

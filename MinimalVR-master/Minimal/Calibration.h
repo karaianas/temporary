@@ -23,4 +23,5 @@ private:
 	Cube* cube2;
 	Skybox* skybox_l;
 	Skybox* skybox_r;
+	Skybox* skybox_x;
 };
