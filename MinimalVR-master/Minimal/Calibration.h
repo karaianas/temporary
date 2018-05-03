@@ -3,7 +3,7 @@
 //#include <glm/glm.hpp>
 //#include <glm/gtc/matrix_transform.hpp>
 
-//#include "Model.h"
+#include "Model.h"
 //#include <glm/gtc/constants.hpp>
 #include "Cube.h"
 #include "Skybox.h"
@@ -18,16 +18,19 @@ public:
 	void drawLeftEye(glm::mat4 V, glm::mat4 P, int skybox);
 	void drawRightEye(glm::mat4 V, glm::mat4 P, int skybox);
 	void drawCube(glm::mat4 V, glm::mat4 P);
+	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 
 	void changeCubeSize(float cubeSize);
 
 private:
 	GLuint program;
 	GLuint program_sky;
+	GLuint program_cont;
 	Cube* cube;
 	Cube* cube2;
 	Skybox* skybox_l;
 	Skybox* skybox_r;
 	Skybox* skybox_x;
 	vector<Skybox*> skyboxes;
+	Model* controller;
 };

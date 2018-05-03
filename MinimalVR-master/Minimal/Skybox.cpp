@@ -43,13 +43,13 @@ void Skybox::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
-	glm::mat4 temp = V;
-	temp[3][0] = 0;
-	temp[3][1] = 0;
-	temp[3][2] = 0;
+	//glm::mat4 temp = V;
+	//temp[3][0] = 0;
+	//temp[3][1] = 0;
+	//temp[3][2] = 0;
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &temp[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &P[0][0]);
 	//glUniform1i(glGetUniformLocation(program, "skybox"), 0);
 

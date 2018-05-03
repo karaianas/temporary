@@ -861,10 +861,15 @@ protected:
 		if (eye_left != -1)
 		{
 			glm::mat4 V_left = V_mod[eye_left];
+			glm::mat4 V_inv = glm::inverse(V_left);
 
-			renderLeftEye(_eyeProjections[eye_left], V_left, skybox_left);
+			renderLeftEye(_eyeProjections[eye_left], V_inv, skybox_left);
 			if (isCube)
-				renderCube(_eyeProjections[eye_left], V_left);
+				renderCube(_eyeProjections[eye_left], V_inv);
+
+			glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
+			temp[3] = glm::vec4(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z, 1.0f);
+			renderController(temp, _eyeProjections[eye_left], V_inv);
 		}
 
 		// Right eye
@@ -875,9 +880,15 @@ protected:
 		if (eye_right != -1)
 		{
 			glm::mat4 V_right = V_mod[eye_right];
-			renderRightEye(_eyeProjections[eye_right], V_right, skybox_right);
+			glm::mat4 V_inv = glm::inverse(V_right);
+
+			renderRightEye(_eyeProjections[eye_right], V_inv, skybox_right);
 			if (isCube)
-				renderCube(_eyeProjections[eye_right], V_right);
+				renderCube(_eyeProjections[eye_right], V_inv);
+
+			glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
+			temp[3] = glm::vec4(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z, 1.0f);
+			renderController(temp, _eyeProjections[eye_right], V_inv);
 		}
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
@@ -896,9 +907,10 @@ protected:
 	}
 
 	virtual void changeCubeSize(float cubeSize) = 0;
-	virtual void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox) = 0;
-	virtual void renderRightEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox) = 0;
-	virtual void renderCube(const glm::mat4 & projection, const glm::mat4 & headpos) = 0;
+	virtual void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox) = 0;
+	virtual void renderRightEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox) = 0;
+	virtual void renderCube(const glm::mat4 & projection, const glm::mat4 & view) = 0;
+	virtual void renderController(glm::mat4 model, glm::mat4 & projection, const glm::mat4 & view) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -999,8 +1011,6 @@ protected:
 		ovr_RecenterTrackingOrigin(_session);
 
 		cal = std::shared_ptr<Calibration>(new Calibration());
-		//myScene = std::shared_ptr<Scene>(new Scene());
-
 	}
 
 	void shutdownGl() override {
@@ -1012,16 +1022,20 @@ protected:
 		cal->changeCubeSize(cubeSize);
 	}
 
-	void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox){
-		cal->drawLeftEye(glm::inverse(headpos), projection, skybox);
+	void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox){
+		cal->drawLeftEye(view, projection, skybox);
 	}
 
-	void renderRightEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox){
-		cal->drawRightEye(glm::inverse(headpos), projection, skybox);
+	void renderRightEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox){
+		cal->drawRightEye(view, projection, skybox);
 	}
 
-	void renderCube(const glm::mat4 & projection, const glm::mat4 & headpos){
-		cal->drawCube(glm::inverse(headpos), projection);
+	void renderCube(const glm::mat4 & projection, const glm::mat4 & view){
+		cal->drawCube(view, projection);
+	}
+
+	void renderController(glm::mat4 model, glm::mat4 & projection, const glm::mat4 & view){
+		cal->drawController(model, view, projection);
 	}
 };
 

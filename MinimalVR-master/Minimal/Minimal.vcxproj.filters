@@ -51,6 +51,12 @@
     <None Include="shaders\skybox.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="shaders\cont.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\cont.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">

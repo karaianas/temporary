@@ -4,17 +4,21 @@
 #define FRAGMENT_SHADER_PATH "shaders//model.frag"
 #define VERTEX_SHADER_PATH2 "shaders//skybox.vert"
 #define FRAGMENT_SHADER_PATH2 "shaders//skybox.frag"
+#define VERTEX_SHADER_PATH3 "shaders//cont.vert"
+#define FRAGMENT_SHADER_PATH3 "shaders//cont.frag"
 
 Calibration::Calibration()
 {
 	program = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 	program_sky = LoadShaders(VERTEX_SHADER_PATH2, FRAGMENT_SHADER_PATH2);
+	program_cont = LoadShaders(VERTEX_SHADER_PATH3, FRAGMENT_SHADER_PATH3);
 
 	cube = new Cube();
 	cube2 = new Cube();
 	skybox_l = new Skybox();
 	skybox_r = new Skybox();
 	skybox_x = new Skybox();
+	controller = new Model("models//sphere//sphere2.obj");
 
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));
@@ -112,6 +116,12 @@ void Calibration::drawCube(glm::mat4 V, glm::mat4 P)
 	glUseProgram(program);
 	cube->draw(program, V, P);
 	cube2->draw(program, V, P);
+}
+
+void Calibration::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
+{
+	glUseProgram(program_cont);
+	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
 }
 
 void Calibration::changeCubeSize(float cubeSize)
