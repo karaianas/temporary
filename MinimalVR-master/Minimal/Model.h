@@ -54,6 +54,8 @@ public:
 			meshes[i].Draw2(program, M, V, P, color);
 	}
 
+
+	//GLuint getSkybox(vector<const char*> faces);
 private:
 	/*  Functions   */
 	// loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.

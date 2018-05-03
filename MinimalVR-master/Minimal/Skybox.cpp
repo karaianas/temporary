@@ -1,5 +1,8 @@
 #include "Skybox.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using namespace std;
 
 Skybox::Skybox()
@@ -91,6 +94,53 @@ GLuint Skybox::loadTexture(vector<const char*> faces)
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	texID = textureID;
+	return textureID;
+}
+
+GLuint Skybox::loadTexturePNG(vector<const char*> faces)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glActiveTexture(GL_TEXTURE0);
+
+	int width, height, nrComponents;
+	unsigned char* image;
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	for (int i = 0; i < 6; i++)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		if (image)
+		{
+			image = stbi_load(faces[i], &width, &height, &nrComponents, 0);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &image[0]);
+			stbi_image_free(image);
+		}
+		else
+		{
+			cout << "Texture failed to load at path: " << endl;
+			stbi_image_free(image);
+		}
+
+		//cout << width << " " << height << endl;
+	}
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 	return textureID;
 }
 

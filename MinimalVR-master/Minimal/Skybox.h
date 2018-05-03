@@ -6,7 +6,6 @@
 #include <iostream>
 #include <vector>
 
-
 using namespace std;
 
 class Skybox {
@@ -22,6 +21,7 @@ public:
 	GLuint texID;
 
 	GLuint loadTexture(vector<const char*> faces);
+	GLuint loadTexturePNG(vector<const char*> faces);
 	unsigned char* loadPPM(const char* filename, int& width, int& height);
 
 	const GLfloat vertices[8][3] = {
