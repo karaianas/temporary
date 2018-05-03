@@ -60,6 +60,7 @@ using glm::quat;
 #include "Scene.h"
 #include "Calibration.h"
 #include <time.h>
+#include <queue>
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
 	GLuint status = glCheckFramebufferStatus(target);
@@ -439,10 +440,6 @@ private:
 	uvec2 _mirrorSize;
 
 	// My implementation
-
-	//clock_t stime;
-	//int level;
-
 	bool cycleX;
 	int cycleXMode;
 	bool cycleA;
@@ -455,7 +452,6 @@ private:
 	float IOD;
 	float dIOD;
 
-	// -----------------
 	int skybox_left;
 	int skybox_right;
 	int eye_left;
@@ -466,11 +462,14 @@ private:
 	glm::vec4 t_right;
 	glm::mat4 R_left;
 	glm::mat4 R_right;
-	// -----------------
 
 	ovrPosef eyePoses[2];
-	ovrQuatf oriPrev;
-	ovrVector3f  posPrev;
+
+	queue<glm::vec3> Q;
+	bool isSmooth;
+	int nframes;
+	glm::vec3 sum;
+	bool cycleI;
 
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
@@ -567,6 +566,7 @@ protected:
 		}
 		glGenFramebuffers(1, &_mirrorFbo);
 
+		//-------------------------
 		cycleX = false;
 		cycleXMode = 0;
 		cycleA = false;
@@ -583,7 +583,6 @@ protected:
 		dIOD = rOffset - lOffset;
 		IOD = dIOD;
 
-		//-------------------------
 		skybox_left = 0;
 		skybox_right = 1;
 		isCube = true;
@@ -595,6 +594,11 @@ protected:
 		t_right = ovr::toGlm(eyePoses[eye_right])[3];
 		R_left = ovr::toGlm(eyePoses[eye_left]);
 		R_right = ovr::toGlm(eyePoses[eye_right]);
+
+		nframes = 1;
+		isSmooth = false;
+		sum = glm::vec3(0.0f);
+		cycleI = false;
 		//-------------------------
 
 		// Haptic
@@ -766,17 +770,49 @@ protected:
 				IOD += 0.005f;
 				if (IOD > 0.3f)
 					IOD = 0.3f;
+				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
+				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
 			}
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.9f)
 			{
 				IOD -= 0.005f;
 				if (IOD < -0.1f)
 					IOD = -0.1f;
+				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
+				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
 			}
 
 			if (inputState.Buttons & ovrButton_RThumb)
 			{
 				IOD = dIOD;
+				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
+				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
+			}
+
+			// Change smoothing mode
+			if (inputState.IndexTrigger[ovrHand_Right] > 0.9f)
+			{
+				if (!cycleI)
+				{
+					cycleI = true;
+					nframes++;
+					nframes %= 45;
+				}
+				else
+					cycleI = false;
+			}
+
+			if (inputState.HandTrigger[ovrHand_Right] > 0.9f)
+			{
+				isSmooth = true;
+			}
+			else
+			{
+				isSmooth = false;
+				int size = Q.size();
+				for (int i = 0; i < size; i++)
+					Q.pop();
+				sum = glm::vec3(0.0f);
 			}
 		}
 
@@ -812,6 +848,40 @@ protected:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// ----------------------------------------------------------
+		glm::mat4 handM = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
+		glm::vec3 handPos = glm::vec3(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z);
+		
+		if (isSmooth)
+		{
+			if (Q.size() < nframes)
+			{
+				Q.push(glm::vec3(handPos));
+				sum += handPos;
+			}
+			else if (Q.size() == nframes)
+			{
+				sum -= Q.front();
+				Q.pop();
+				Q.push(glm::vec3(handPos));
+				sum += handPos;
+			}
+			else
+			{
+				while (Q.size() > nframes)
+				{
+					sum -= Q.front();
+					Q.pop();
+				}
+			}
+
+			glm::vec3 avg = sum / float(Q.size());
+			handM[3] = glm::vec4(avg, 1.0f);
+		}
+		else
+			handM[3] = glm::vec4(handPos, 1.0f);
+		// ----------------------------------------------------------
+
+		// ----------------------------------------------------------
 		glm::mat4 V_[2];
 		glm::mat4 V_mod[2];
 		V_[0] = ovr::toGlm(eyePoses[0]);
@@ -845,11 +915,7 @@ protected:
 		V_mod[0][3] = t_left;
 		V_mod[1] = R_right;
 		V_mod[1][3] = t_right;
-		// ----------------------------------------------------------
 
-		// ----------------------------------------------------------
-		_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
-		_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
 		// ----------------------------------------------------------
 
 		// Left eye
@@ -867,9 +933,7 @@ protected:
 			if (isCube)
 				renderCube(_eyeProjections[eye_left], V_inv);
 
-			glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
-			temp[3] = glm::vec4(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z, 1.0f);
-			renderController(temp, _eyeProjections[eye_left], V_inv);
+			renderController(handM, _eyeProjections[eye_left], V_inv);
 		}
 
 		// Right eye
@@ -886,9 +950,7 @@ protected:
 			if (isCube)
 				renderCube(_eyeProjections[eye_right], V_inv);
 
-			glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f));
-			temp[3] = glm::vec4(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z, 1.0f);
-			renderController(temp, _eyeProjections[eye_right], V_inv);
+			renderController(handM, _eyeProjections[eye_right], V_inv);
 		}
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
