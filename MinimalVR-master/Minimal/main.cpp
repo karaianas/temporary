@@ -561,7 +561,7 @@ protected:
 
 		sizeChange = false;
 		cubeSize = 0.3f;
-		IOD = 0.3f;//------------------------------------------------------------------- Default value
+		IOD = 0.0597519f;//------------------------------------------------------------------- Default value
 
 		// Haptic
 		bufferSize = 256;
@@ -655,6 +655,7 @@ protected:
 					cycleB = true;
 					cycleBMode += 1;
 					cycleBMode %= 4;
+					cout << cubeSize << endl;
 				}
 			}
 			else
@@ -703,39 +704,41 @@ protected:
 			if (inputState.Buttons & ovrButton_RThumb)
 			{
 				// Reset IOD
-				IOD = 0.3f;
+				IOD = 0.0597519f;
 			}
 			// -----------------------------------------------------------------
 		}
 
 		// -----------------------------------------------------------------
 		ovrPosef eyePoses_[2];
-		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses_, &_sceneLayer.SensorSampleTime);
-		if (cycleBMode == 0)
-		{
-			eyePoses[0] = eyePoses_[0];
-			eyePoses[1] = eyePoses_[1];
-		}
-		else if (cycleBMode == 1)
-		{
-			eyePoses[0].Orientation = eyePoses_[0].Orientation;
-			eyePoses[1].Orientation = eyePoses_[1].Orientation;
-		}
-		else if (cycleBMode == 2)
-		{
-			eyePoses[0].Position = eyePoses_[0].Position;
-			eyePoses[1].Position = eyePoses_[1].Position;
-		}
-		else
-		{
-		}
+		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
+		//if (cycleBMode == 0)
+		//{
+		//	eyePoses[0] = eyePoses_[0];
+		//	eyePoses[1] = eyePoses_[1];
+		//}
+		//else if (cycleBMode == 1)
+		//{
+		//	eyePoses[0].Orientation = eyePoses_[0].Orientation;
+		//	eyePoses[1].Orientation = eyePoses_[1].Orientation;
+		//}
+		//else if (cycleBMode == 2)
+		//{
+		//	eyePoses[0].Position = eyePoses_[0].Position;
+		//	eyePoses[1].Position = eyePoses_[1].Position;
+		//}
+		//else
+		//{
+		//}
 		// -----------------------------------------------------------------
 
 		// -----------------------------------------------------------------
 		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
 		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
-		float IOD_ = lOffset - rOffset;
-		// cout << "l: " << lOffset << " r: " << rOffset << " IOD: " << IOD << endl;
+		//_viewScaleDesc.HmdToEyePose[0].Position.x = -1.0f;
+		//_viewScaleDesc.HmdToEyePose[1].Position.x = 1.0f;
+		//float IOD_ = lOffset - rOffset;
+		//cout << "l: " << lOffset << " r: " << rOffset << " IOD: " << IOD_ << endl;
 		// -----------------------------------------------------------------
 
 		int curIndex;
@@ -773,7 +776,7 @@ protected:
 					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
 					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj, cycleBMode);
 				}
 				else if (cycleAMode == 3)
 				{
@@ -782,11 +785,14 @@ protected:
 					_sceneLayer.RenderPose[1] = eyePoses[1];
 
 					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj);
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj, cycleBMode);
 				}
 				else
 				{
 					// Do nothing
+					const auto& vp = _sceneLayer.Viewport[eye];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 				}
 			}
 
@@ -800,7 +806,7 @@ protected:
 					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 
 					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj, cycleBMode);
 				}
 				else if (cycleAMode == 3)
 				{
@@ -809,11 +815,14 @@ protected:
 					_sceneLayer.RenderPose[0] = eyePoses[0];
 
 					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj);
+					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj, cycleBMode);
 				}
 				else 
 				{
 					// Do nothing
+					const auto& vp = _sceneLayer.Viewport[eye];
+					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
+					_sceneLayer.RenderPose[eye] = eyePoses[eye];
 				}
 			}
 
@@ -863,7 +872,7 @@ protected:
 	}
 
 	
-	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) = 0;
+	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj, int cycleBMode) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
 };
 
@@ -946,6 +955,10 @@ class ExampleApp : public RiftApp {
 
 	// My implementation
 	std::shared_ptr<Calibration> cal;
+	glm::vec4 t_l;
+	glm::mat4 R_l;
+	glm::vec4 t_r;
+	glm::mat4 R_r;
 	//std::shared_ptr<Scene> myScene;
 	//clock_t itime;
 	//clock_t ftime;
@@ -956,7 +969,7 @@ public:
 protected:
 	void initGl() override {
 		RiftApp::initGl();
-		glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
 
@@ -970,12 +983,80 @@ protected:
 		//controller.reset();
 	}
 
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj) override {
-		glm::mat4 temp = glm::inverse(headpos);
-		//temp[3][0] = 0.0f;
-		//temp[3][1] = 0.0f;
-		//temp[3][2] = 0.0f;
-		cal->draw(temp, projection, eye, obj);
+	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj, int cycleBMode) override {
+		//glm::mat4 temp = glm::inverse(headpos);
+		glm::mat4 temp = headpos;
+		//cal->draw(temp, projection, eye, obj);
+
+		if (eye == 0)
+		{
+			if (cycleBMode == 0)
+			{
+				t_l = temp[3];
+				R_l = temp;
+				
+				cal->draw(glm::inverse(temp), projection, eye, obj);
+			}
+			else if (cycleBMode == 1)
+			{
+				// Update orientation
+				R_l = temp;
+
+				glm::mat4 sth = R_l;
+				sth[3] = t_l;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+			else if (cycleBMode == 2)
+			{
+				// Update translation
+				t_l = temp[3];
+
+				glm::mat4 sth = R_l;
+				sth[3] = t_l;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+			else
+			{
+				glm::mat4 sth = R_l;
+				sth[3] = t_l;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+		}
+		else
+		{
+			if (cycleBMode == 0)
+			{
+				t_r = temp[3];
+				R_r = temp;
+				cal->draw(glm::inverse(temp), projection, eye, obj);
+			}
+			else if (cycleBMode == 1)
+			{
+				// Update orientation
+				R_r = temp;
+
+				glm::mat4 sth = R_r;
+				sth[3] = t_r;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+			else if (cycleBMode == 2)
+			{
+				// Update translation
+				t_r = temp[3];
+
+				glm::mat4 sth = R_r;
+				sth[3] = t_r;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+			else
+			{
+				glm::mat4 sth = R_r;
+				sth[3] = t_r;
+				cal->draw(glm::inverse(sth), projection, eye, obj);
+			}
+		}
+
+
 	}
 
 	void changeCubeSize(float cubeSize){
