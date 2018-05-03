@@ -134,7 +134,7 @@
   <ItemGroup>
     <ClCompile Include="Calibration.cpp" />
     <ClCompile Include="Cube.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="main_opt.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="shader.cpp" />

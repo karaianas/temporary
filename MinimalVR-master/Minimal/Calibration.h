@@ -13,7 +13,12 @@ class Calibration {
 public:
 	Calibration();
 
-	void draw(glm::mat4 V, glm::mat4 P, int eye, bool obj);
+	void draw(glm::mat4 V, glm::mat4 P, int eye, bool obj, bool myScene);
+
+	void drawLeftEye(glm::mat4 V, glm::mat4 P, int skybox);
+	void drawRightEye(glm::mat4 V, glm::mat4 P, int skybox);
+	void drawCube(glm::mat4 V, glm::mat4 P);
+
 	void changeCubeSize(float cubeSize);
 
 private:
@@ -24,4 +29,5 @@ private:
 	Skybox* skybox_l;
 	Skybox* skybox_r;
 	Skybox* skybox_x;
+	vector<Skybox*> skyboxes;
 };

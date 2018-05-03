@@ -62,19 +62,29 @@ Calibration::Calibration()
 	faces_x.push_back("textures//room//pz.ppm");
 	faces_x.push_back("textures//room//nz.ppm");
 	skybox_x->loadTexture(faces_x);
+
+	skyboxes.push_back(skybox_l);
+	skyboxes.push_back(skybox_r);
+	skyboxes.push_back(skybox_x);
 }
 
-void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
+void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj, bool myScene)
 {
 	if (eye == 0)
 	{
 		glUseProgram(program_sky);
-		skybox_l->draw(program, V, P);
+		if (!myScene)
+			skybox_l->draw(program, V, P);
+		else
+			skybox_x->draw(program, V, P);
 	}
 	else if (eye == 1)
 	{
 		glUseProgram(program_sky);
-		skybox_l->draw(program, V, P);
+		if (!myScene)
+			skybox_r->draw(program, V, P);
+		else
+			skybox_x->draw(program, V, P);
 	}
 
 	if (obj)
@@ -83,6 +93,25 @@ void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj)
 		cube->draw(program, V, P);
 		cube2->draw(program, V, P);
 	}
+}
+
+void Calibration::drawLeftEye(glm::mat4 V, glm::mat4 P, int skybox)
+{
+	glUseProgram(program_sky);
+	skyboxes[skybox]->draw(program_sky, V, P);
+}
+
+void Calibration::drawRightEye(glm::mat4 V, glm::mat4 P, int skybox)
+{
+	glUseProgram(program_sky);
+	skyboxes[skybox]->draw(program_sky, V, P);
+}
+
+void Calibration::drawCube(glm::mat4 V, glm::mat4 P)
+{
+	glUseProgram(program);
+	cube->draw(program, V, P);
+	cube2->draw(program, V, P);
 }
 
 void Calibration::changeCubeSize(float cubeSize)

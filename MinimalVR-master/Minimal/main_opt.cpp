@@ -454,6 +454,20 @@ private:
 	float cubeSize;
 	float IOD;
 	float dIOD;
+
+	// -----------------
+	int skybox_left;
+	int skybox_right;
+	int eye_left;
+	int eye_right;
+	bool isCube;
+
+	glm::vec4 t_left;
+	glm::vec4 t_right;
+	glm::mat4 R_left;
+	glm::mat4 R_right;
+	// -----------------
+
 	ovrPosef eyePoses[2];
 	ovrQuatf oriPrev;
 	ovrVector3f  posPrev;
@@ -569,6 +583,20 @@ protected:
 		dIOD = rOffset - lOffset;
 		IOD = dIOD;
 
+		//-------------------------
+		skybox_left = 0;
+		skybox_right = 1;
+		isCube = true;
+
+		eye_left = 0;
+		eye_right = 1;
+
+		t_left = ovr::toGlm(eyePoses[eye_left])[3];
+		t_right = ovr::toGlm(eyePoses[eye_right])[3];
+		R_left = ovr::toGlm(eyePoses[eye_left]);
+		R_right = ovr::toGlm(eyePoses[eye_right]);
+		//-------------------------
+
 		// Haptic
 		bufferSize = 256;
 		dataBufferX = (unsigned char *)malloc(bufferSize);
@@ -594,7 +622,7 @@ protected:
 	}
 
 	void draw() final override {
-	
+
 		// Query Touch controllers. Query their parameters:
 		double displayMidpointSeconds = ovr_GetPredictedDisplayTime(_session, 0);
 		ovrTrackingState trackState = ovr_GetTrackingState(_session, displayMidpointSeconds, ovrTrue);
@@ -611,7 +639,7 @@ protected:
 		//std::cerr << "handStatus[right] = " << handStatus[ovrHand_Right] << std::endl;
 
 		// Process controller position and orientation:
-		ovrPosef handPoses[2];  
+		ovrPosef handPoses[2];
 		handPoses[0] = trackState.HandPoses[0].ThePose;
 		handPoses[1] = trackState.HandPoses[1].ThePose;
 
@@ -620,10 +648,9 @@ protected:
 		handPosition[1] = handPoses[1].Position;
 
 		ovrInputState inputState;
-		//bool trigState = false;
 		if (OVR_SUCCESS(ovr_GetInputState(_session, ovrControllerType_Touch, &inputState)))
 		{
-			// Touch controller support
+			// Change skybox mode
 			if (inputState.Buttons & ovrButton_X)
 			{
 				if (!cycleX)
@@ -631,12 +658,37 @@ protected:
 					cycleX = true;
 					cycleXMode += 1;
 					cycleXMode %= 4;
-					//cout << cycleXMode << endl;
+
+					if (cycleXMode == 0)
+					{
+						skybox_left = 0;
+						skybox_right = 1;
+						isCube = true;
+					}
+					else if (cycleXMode == 1)
+					{
+						skybox_left = 0;
+						skybox_right = 1;
+						isCube = false;
+					}
+					else if (cycleXMode == 2)
+					{
+						skybox_left = 0;
+						skybox_right = 0;
+						isCube = false;
+					}
+					else
+					{
+						skybox_left = 2;
+						skybox_right = 2;
+						isCube = true;
+					}
 				}
 			}
 			else
 				cycleX = false;
 
+			// Change eye mode
 			if (inputState.Buttons & ovrButton_A)
 			{
 				if (!cycleA)
@@ -644,11 +696,33 @@ protected:
 					cycleA = true;
 					cycleAMode += 1;
 					cycleAMode %= 4;
+
+					if (cycleAMode == 0)
+					{
+						eye_left = 0;
+						eye_right = 1;
+					}
+					else if (cycleAMode == 1)
+					{
+						eye_left = 0;
+						eye_right = -1;
+					}
+					else if (cycleAMode == 2)
+					{
+						eye_left = -1;
+						eye_right = 1;
+					}
+					else
+					{
+						eye_left = 1;
+						eye_right = 0;
+					}
 				}
 			}
 			else
 				cycleA = false;
 
+			// Change tracking mode
 			if (inputState.Buttons & ovrButton_B)
 			{
 				if (!cycleB)
@@ -656,11 +730,13 @@ protected:
 					cycleB = true;
 					cycleBMode += 1;
 					cycleBMode %= 4;
+
 				}
 			}
 			else
 				cycleB = false;
 
+			// Change cube size
 			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
 			{
 				cubeSize += 0.01f;
@@ -684,16 +760,15 @@ protected:
 				changeCubeSize(cubeSize);
 			}
 
+			// Change IOD
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.9f)
 			{
-				// Increase IOD
 				IOD += 0.005f;
 				if (IOD > 0.3f)
 					IOD = 0.3f;
 			}
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.9f)
 			{
-				// Decrease IOD
 				IOD -= 0.005f;
 				if (IOD < -0.1f)
 					IOD = -0.1f;
@@ -701,13 +776,12 @@ protected:
 
 			if (inputState.Buttons & ovrButton_RThumb)
 			{
-				// Reset IOD
 				IOD = dIOD;
 			}
 		}
 
 		// -----------------------------------------------------------------
-		ovrPosef eyePoses_[2];
+		//ovrPosef eyePoses_[2];
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
 		//if (cycleBMode == 0)
 		//{
@@ -729,9 +803,6 @@ protected:
 		//}
 		// -----------------------------------------------------------------
 
-		_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD/2.0f;
-		_viewScaleDesc.HmdToEyePose[1].Position.x = IOD/2.0f;
-
 		int curIndex;
 		ovr_GetTextureSwapChainCurrentIndex(_session, _eyeTexture, &curIndex);
 		GLuint curTexId;
@@ -740,89 +811,74 @@ protected:
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		
-		ovr::for_each_eye([&](ovrEyeType eye) {
+		// ----------------------------------------------------------
+		glm::mat4 V_[2];
+		glm::mat4 V_mod[2];
+		V_[0] = ovr::toGlm(eyePoses[0]);
+		V_[1] = ovr::toGlm(eyePoses[1]);
 
-			int eye_l = 0;
-			int eye_r = 1;
-			bool obj = true;
-			bool myScene = false;
+		if (cycleBMode == 0)
+		{
+			t_left = V_[0][3];
+			R_left = V_[0];
+			t_right = V_[1][3];
+			R_right = V_[1];
+		}
+		else if (cycleBMode == 1)
+		{
+			// Update orientation
+			R_left = V_[0];
+			R_right = V_[1];
+		}
+		else if (cycleBMode == 2)
+		{
+			// Update translation
+			t_left = V_[0][3];
+			t_right = V_[1][3];
+		}
+		else
+		{
+			// Nothing
+		}
 
-			if (cycleXMode == 1)
-			{
-				obj = false;
-			}
-			else if (cycleXMode == 2)
-			{
-				obj = false;
-				eye_r = eye_l;
-			}
-			else if (cycleXMode == 3)
-			{
-				eye_r = eye_l;
-				myScene = true;
-			}
+		V_mod[0] = R_left;
+		V_mod[0][3] = t_left;
+		V_mod[1] = R_right;
+		V_mod[1][3] = t_right;
+		// ----------------------------------------------------------
 
-			// Left
-			if (eye == 0 )
-			{
-				if (cycleAMode == 0 || cycleAMode == 1)
-				{
-					const auto& vp = _sceneLayer.Viewport[eye];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[eye] = eyePoses[eye];
+		// ----------------------------------------------------------
+		_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
+		_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
+		// ----------------------------------------------------------
 
-					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj, cycleBMode, myScene);
-				}
-				else if (cycleAMode == 3)
-				{
-					const auto& vp = _sceneLayer.Viewport[1];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[1] = eyePoses[1];
+		// Left eye
+		const auto& vp0 = _sceneLayer.Viewport[0];
+		glViewport(vp0.Pos.x, vp0.Pos.y, vp0.Size.w, vp0.Size.h);
+		_sceneLayer.RenderPose[0] = eyePoses[0];
 
-					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_l, obj, cycleBMode, myScene);
-				}
-				else
-				{
-					// Do nothing
-					const auto& vp = _sceneLayer.Viewport[eye];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[eye] = eyePoses[eye];
-				}
-			}
+		// Rendering
+		if (eye_left != -1)
+		{
+			glm::mat4 V_left = V_mod[eye_left];
 
-			// Right
-			if (eye == 1)
-			{
-				if (cycleAMode == 0 || cycleAMode == 2)
-				{
-					const auto& vp = _sceneLayer.Viewport[eye];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[eye] = eyePoses[eye];
+			renderLeftEye(_eyeProjections[eye_left], V_left, skybox_left);
+			if (isCube)
+				renderCube(_eyeProjections[eye_left], V_left);
+		}
 
-					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj, cycleBMode, myScene);
-				}
-				else if (cycleAMode == 3)
-				{
-					const auto& vp = _sceneLayer.Viewport[0];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[0] = eyePoses[0];
+		// Right eye
+		const auto& vp1 = _sceneLayer.Viewport[1];
+		glViewport(vp1.Pos.x, vp1.Pos.y, vp1.Size.w, vp1.Size.h);
+		_sceneLayer.RenderPose[1] = eyePoses[1];
 
-					// Rendering
-					renderScene(_eyeProjections[eye], ovr::toGlm(eyePoses[eye]), eye_r, obj, cycleBMode, myScene);
-				}
-				else 
-				{
-					// Do nothing
-					const auto& vp = _sceneLayer.Viewport[eye];
-					glViewport(vp.Pos.x, vp.Pos.y, vp.Size.w, vp.Size.h);
-					_sceneLayer.RenderPose[eye] = eyePoses[eye];
-				}
-			}
-		});
+		if (eye_right != -1)
+		{
+			glm::mat4 V_right = V_mod[eye_right];
+			renderRightEye(_eyeProjections[eye_right], V_right, skybox_right);
+			if (isCube)
+				renderCube(_eyeProjections[eye_right], V_right);
+		}
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -839,9 +895,10 @@ protected:
 
 	}
 
-	
-	virtual void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj, int cycleBMode, bool myScene) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
+	virtual void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox) = 0;
+	virtual void renderRightEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox) = 0;
+	virtual void renderCube(const glm::mat4 & projection, const glm::mat4 & headpos) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -951,90 +1008,26 @@ protected:
 		//controller.reset();
 	}
 
-	void renderScene(const glm::mat4 & projection, const glm::mat4 & headpos, int eye, bool obj, int cycleBMode, bool myScene) override {
-		//glm::mat4 temp = glm::inverse(headpos);
-		glm::mat4 temp = headpos;
-		//cal->draw(temp, projection, eye, obj);
-
-		if (eye == 0)
-		{
-			if (cycleBMode == 0)
-			{
-				t_l = temp[3];
-				R_l = temp;
-				
-				cal->draw(glm::inverse(temp), projection, eye, obj, myScene);
-			}
-			else if (cycleBMode == 1)
-			{
-				// Update orientation
-				R_l = temp;
-
-				glm::mat4 sth = R_l;
-				sth[3] = t_l;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-			else if (cycleBMode == 2)
-			{
-				// Update translation
-				t_l = temp[3];
-
-				glm::mat4 sth = R_l;
-				sth[3] = t_l;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-			else
-			{
-				glm::mat4 sth = R_l;
-				sth[3] = t_l;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-		}
-		else
-		{
-			if (cycleBMode == 0)
-			{
-				t_r = temp[3];
-				R_r = temp;
-				cal->draw(glm::inverse(temp), projection, eye, obj, myScene);
-			}
-			else if (cycleBMode == 1)
-			{
-				// Update orientation
-				R_r = temp;
-
-				glm::mat4 sth = R_r;
-				sth[3] = t_r;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-			else if (cycleBMode == 2)
-			{
-				// Update translation
-				t_r = temp[3];
-
-				glm::mat4 sth = R_r;
-				sth[3] = t_r;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-			else
-			{
-				glm::mat4 sth = R_r;
-				sth[3] = t_r;
-				cal->draw(glm::inverse(sth), projection, eye, obj, myScene);
-			}
-		}
-
-
+	void changeCubeSize(float cubeSize) {
+		cal->changeCubeSize(cubeSize);
 	}
 
-	void changeCubeSize(float cubeSize){
-		cal->changeCubeSize(cubeSize);
+	void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox){
+		cal->drawLeftEye(glm::inverse(headpos), projection, skybox);
+	}
+
+	void renderRightEye(const glm::mat4 & projection, const glm::mat4 & headpos, int skybox){
+		cal->drawRightEye(glm::inverse(headpos), projection, skybox);
+	}
+
+	void renderCube(const glm::mat4 & projection, const glm::mat4 & headpos){
+		cal->drawCube(glm::inverse(headpos), projection);
 	}
 };
 
 // Execute our example class
 //int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-int main_(int argc, char** argv) {
+int main(int argc, char** argv) {
 	int result = -1;
 	try {
 		if (!OVR_SUCCESS(ovr_Initialize(nullptr))) {
