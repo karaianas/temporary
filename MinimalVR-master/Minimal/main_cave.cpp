@@ -741,30 +741,7 @@ protected:
 			else
 				cycleB = false;
 
-			// Change cube size
-			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
-			{
-				cubeSize += 0.01f;
-				if (cubeSize > 0.5f)
-					cubeSize = 0.5f;
-				changeCubeSize(cubeSize);
-
-			}
-			else if (inputState.Thumbstick[ovrHand_Left].x < -0.9f)
-			{
-
-				cubeSize -= 0.01f;
-				if (cubeSize < 0.01f)
-					cubeSize = 0.01f;
-				changeCubeSize(cubeSize);
-			}
-
-			if (inputState.Buttons & ovrButton_LThumb)
-			{
-				cubeSize = 0.3f;
-				changeCubeSize(cubeSize);
-			}
-
+			
 			// Change IOD
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.9f)
 			{
@@ -831,7 +808,7 @@ protected:
 		// ----------------------------------------------------------
 		glm::mat4 handM = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
 		glm::vec3 handPos = glm::vec3(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z);
-		
+
 		if (isSmooth)
 		{
 			if (Q.size() < nframes)
@@ -912,12 +889,6 @@ protected:
 			glm::mat4 V_inv = glm::inverse(V_left);
 
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
-
-			//renderLeftEye(_eyeProjections[eye_left], V_inv, skybox_left);
-			//if (isCube)
-			//	renderCube(_eyeProjections[eye_left], V_inv, eye_left);
-
-			//renderController(handM, _eyeProjections[eye_left], V_inv);
 		}
 
 
@@ -933,11 +904,6 @@ protected:
 			glm::mat4 V_inv = glm::inverse(V_right);
 
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
-			//renderRightEye(_eyeProjections[eye_right], V_inv, skybox_right);
-			//if (isCube)
-			//	renderCube(_eyeProjections[eye_right], V_inv, eye_right);
-
-			//renderController(handM, _eyeProjections[eye_right], V_inv);
 		}
 
 
@@ -956,15 +922,8 @@ protected:
 
 	}
 
-	virtual void changeCubeSize(float cubeSize) = 0;
-	virtual void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox) = 0;
-	virtual void renderRightEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox) = 0;
-	virtual void renderCube(const glm::mat4 & projection, const glm::mat4 & view, int eye) = 0;
-	virtual void renderController(glm::mat4 model, glm::mat4 & projection, const glm::mat4 & view) = 0;
-	
-	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int test) = 0;
-	virtual void renderPlane(glm::mat4 & projection, const glm::mat4 & view, int tex) = 0;
 
+	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1045,15 +1004,8 @@ void main(void) {
 class ExampleApp : public RiftApp {
 
 	// My implementation
-	std::shared_ptr<Calibration> cal;
 	std::shared_ptr<Cave> cave;
-	glm::vec4 t_l;
-	glm::mat4 R_l;
-	glm::vec4 t_r;
-	glm::mat4 R_r;
-	//std::shared_ptr<Scene> myScene;
-	//clock_t itime;
-	//clock_t ftime;
+
 
 public:
 	ExampleApp() { }
@@ -1065,47 +1017,23 @@ protected:
 		glEnable(GL_DEPTH_TEST);
 		ovr_RecenterTrackingOrigin(_session);
 
-		cal = std::shared_ptr<Calibration>(new Calibration());
 		cave = std::shared_ptr<Cave>(new Cave());
 	}
 
 	void shutdownGl() override {
-		//cubeScene.reset();
-		//controller.reset();
 	}
 
-	void changeCubeSize(float cubeSize) {
-		cal->changeCubeSize(cubeSize);
+
+
+	void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) {
+		cave->drawMainScene(view, projection, fboID);
 	}
 
-	void renderLeftEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox){
-		cal->drawLeftEye(view, projection, skybox);
-	}
-
-	void renderRightEye(const glm::mat4 & projection, const glm::mat4 & view, int skybox){
-		cal->drawRightEye(view, projection, skybox);
-	}
-
-	void renderCube(const glm::mat4 & projection, const glm::mat4 & view, int eye){
-		cal->drawCube(view, projection, eye);
-	}
-
-	void renderController(glm::mat4 model, glm::mat4 & projection, const glm::mat4 & view){
-		cal->drawController(model, view, projection);
-	}
-
-	void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int test) {
-		cave->drawMainScene(view, projection, test);
-	}
-
-	void renderPlane(glm::mat4 & projection, const glm::mat4 & view, int tex) {
-		cal->drawPlane(view, projection, tex);
-	}
 };
 
 // Execute our example class
 //int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-int main_(int argc, char** argv) {
+int main(int argc, char** argv) {
 	int result = -1;
 	try {
 		if (!OVR_SUCCESS(ovr_Initialize(nullptr))) {

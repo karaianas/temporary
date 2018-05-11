@@ -47,7 +47,7 @@ void Skybox::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	//temp[3][0] = 0;
 	//temp[3][1] = 0;
 	//temp[3][2] = 0;
-
+	glUseProgram(program);
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &P[0][0]);
@@ -62,6 +62,7 @@ void Skybox::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 GLuint Skybox::loadTexture(vector<const char*> faces)

@@ -1,4 +1,4 @@
-#include "Calibration.h"
+#include "Cave.h"
 
 #define VERTEX_SHADER_PATH "shaders//model.vert"
 #define FRAGMENT_SHADER_PATH "shaders//model.frag"
@@ -9,7 +9,9 @@
 #define PVERTEX_SHADER_PATH "shaders//pass.vert"
 #define PFRAGMENT_SHADER_PATH "shaders//pass.frag"
 
-Calibration::Calibration()
+using namespace std;
+
+Cave::Cave()
 {
 	program = LoadShaders(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
 	program_sky = LoadShaders(VERTEX_SHADER_PATH2, FRAGMENT_SHADER_PATH2);
@@ -22,9 +24,6 @@ Calibration::Calibration()
 	skybox_r = new Skybox();
 	skybox_x = new Skybox();
 	controller = new Model("models//sphere//sphere2.obj");
-
-	plane = new Plane();
-	createFB();
 
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));
@@ -76,9 +75,12 @@ Calibration::Calibration()
 	skyboxes.push_back(skybox_l);
 	skyboxes.push_back(skybox_r);
 	skyboxes.push_back(skybox_x);
+	
+	plane = new Plane();
+	createFB();
 }
 
-void Calibration::createFB()
+void Cave::createFB()
 {
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -100,81 +102,31 @@ void Calibration::createFB()
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 }
 
-void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj, bool myScene)
+void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int test)
 {
-	if (eye == 0)
-	{
-		glUseProgram(program_sky);
-		if (!myScene)
-			skybox_l->draw(program, V, P);
-		else
-			skybox_x->draw(program, V, P);
-	}
-	else if (eye == 1)
-	{
-		glUseProgram(program_sky);
-		if (!myScene)
-			skybox_r->draw(program, V, P);
-		else
-			skybox_x->draw(program, V, P);
-	}
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glViewport(0, 0, 1344, 1600);
+	//glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (obj)
-	{
-		glUseProgram(program);
-		cube->draw(program, V, P);
-		cube2->draw(program, V, P);
-	}
-}
-
-void Calibration::drawLeftEye(glm::mat4 V, glm::mat4 P, int skybox)
-{
-	glUseProgram(program_sky);
-	skyboxes[skybox]->draw(program_sky, V, P);
-}
-
-void Calibration::drawRightEye(glm::mat4 V, glm::mat4 P, int skybox)
-{
-	glUseProgram(program_sky);
-	skyboxes[skybox]->draw(program_sky, V, P);
-}
-
-void Calibration::drawCube(glm::mat4 V, glm::mat4 P, int eye)
-{
+	skyboxes[0]->draw(program_sky, V, P);
 	cube->draw(program, V, P);
 	cube2->draw(program, V, P);
+
+	//cout << "!" << endl;
+	drawTexture(V, P, test);
 }
 
-void Calibration::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
+void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int test)
 {
-	glUseProgram(program_cont);
-	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
-}
+	glBindFramebuffer(GL_FRAMEBUFFER, test);
+	glViewport(0, 0, 1344, 1600);
+	//glDisable(GL_DEPTH_TEST);
 
-void Calibration::drawPlane(glm::mat4 V, glm::mat4 P, int tex)
-{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	plane->draw(program_plane, V, P, TBO);
 }
 
-void Calibration::changeCubeSize(float cubeSize)
-{
-	cube->update(cubeSize);
-	cube2->update(cubeSize);
-}
-
-void Calibration::startRender()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void Calibration::stopRender()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_DEPTH_TEST); 
-	glClear(GL_COLOR_BUFFER_BIT);
-}

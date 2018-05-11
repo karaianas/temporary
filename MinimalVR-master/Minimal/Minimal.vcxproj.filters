@@ -33,7 +33,13 @@
     <ClCompile Include="Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main_opt.cpp">
+    <ClCompile Include="Plane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Cave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main_cave.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -55,6 +61,12 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\cont.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\pass.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\pass.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -81,6 +93,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Skybox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cave.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

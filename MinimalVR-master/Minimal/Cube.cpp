@@ -42,6 +42,7 @@ void Cube::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	//glDepthMask(GL_FALSE);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
+	glUseProgram(program);
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
@@ -57,6 +58,7 @@ void Cube::draw(GLuint program, glm::mat4 V, glm::mat4 P)
 	//glEnable(GL_DEPTH_TEST);
 	//glDepthFunc(GL_LESS);
 	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 void Cube::update(float cubeSize)
