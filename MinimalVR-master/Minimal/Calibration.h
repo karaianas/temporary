@@ -14,8 +14,6 @@ class Calibration {
 public:
 	Calibration();
 
-	void createFB();
-
 	void draw(glm::mat4 V, glm::mat4 P, int eye, bool obj, bool myScene);
 
 	void drawLeftEye(glm::mat4 V, glm::mat4 P, int skybox);
@@ -24,9 +22,6 @@ public:
 	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 	void drawPlane(glm::mat4 V, glm::mat4 P, int tex);
 	void changeCubeSize(float cubeSize);
-
-	void startRender();
-	void stopRender();
 
 private:
 	GLuint program;
@@ -40,8 +35,4 @@ private:
 	Skybox* skybox_x;
 	vector<Skybox*> skyboxes;
 	Model* controller;
-	Plane* plane;
-
-	// ---------------
-	GLuint FBO, TBO, RBO;
 };

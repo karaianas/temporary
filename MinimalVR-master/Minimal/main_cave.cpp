@@ -888,9 +888,10 @@ protected:
 			glm::mat4 V_left = V_mod[eye_left];
 			glm::mat4 V_inv = glm::inverse(V_left);
 
+			setViewport(vp0.Pos.x, vp0.Pos.y);
+			setEye(glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z));
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
 		}
-
 
 		// Right eye
 		const auto& vp1 = _sceneLayer.Viewport[1];
@@ -903,6 +904,8 @@ protected:
 			glm::mat4 V_right = V_mod[eye_right];
 			glm::mat4 V_inv = glm::inverse(V_right);
 
+			setViewport(vp1.Pos.x, vp1.Pos.y);
+			setEye(glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z));
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
 		}
 
@@ -924,6 +927,8 @@ protected:
 
 
 	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) = 0;
+	virtual void setViewport(int w0, int h0) = 0;
+	virtual void setEye(glm::vec3 eyePos) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1024,11 +1029,17 @@ protected:
 	}
 
 
-
 	void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) {
 		cave->drawMainScene(view, projection, fboID);
 	}
 
+	void setViewport(int w0, int h0) {
+		cave->setViewport(w0, h0);
+	}
+
+	void setEye(glm::vec3 eyePos) {
+		cave->setEye(eyePos);
+	}
 };
 
 // Execute our example class

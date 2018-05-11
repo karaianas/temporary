@@ -23,9 +23,6 @@ Calibration::Calibration()
 	skybox_x = new Skybox();
 	controller = new Model("models//sphere//sphere2.obj");
 
-	plane = new Plane();
-	createFB();
-
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));
 	glm::mat4 R = glm::rotate(glm::mat4(1.0f), 3.141592f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -78,30 +75,6 @@ Calibration::Calibration()
 	skyboxes.push_back(skybox_x);
 }
 
-void Calibration::createFB()
-{
-	glGenFramebuffers(1, &FBO);
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-	// create a color attachment texture
-	glGenTextures(1, &TBO);
-	glBindTexture(GL_TEXTURE_2D, TBO);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1000, 1000, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, TBO, 0);
-
-	// create a renderbuffer object for depth and stencil attachment (we won't be sampling these)
-	glGenRenderbuffers(1, &RBO);
-	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1000, 1000); // use a single renderbuffer object for both a depth AND stencil buffer.
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO); // now actually attach it
-																								  // now that we actually created the framebuffer and added all attachments we want to check if it is actually complete now
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << endl;
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-}
 
 void Calibration::draw(glm::mat4 V, glm::mat4 P, int eye, bool obj, bool myScene)
 {
@@ -154,27 +127,8 @@ void Calibration::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
 }
 
-void Calibration::drawPlane(glm::mat4 V, glm::mat4 P, int tex)
-{
-	plane->draw(program_plane, V, P, TBO);
-}
-
 void Calibration::changeCubeSize(float cubeSize)
 {
 	cube->update(cubeSize);
 	cube2->update(cubeSize);
-}
-
-void Calibration::startRender()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void Calibration::stopRender()
-{
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glDisable(GL_DEPTH_TEST); 
-	glClear(GL_COLOR_BUFFER_BIT);
 }

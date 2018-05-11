@@ -11,52 +11,39 @@ class Plane {
 public:
 	Plane();
 
-	bool createFrameBuffer();
-	void createTexture();
 	void draw(GLuint program, glm::mat4 V, glm::mat4 P, int test);
+	
+	void setPoints();
+	void setBasis();
+	void setEye(glm::vec3 eye);
+
+	void offAxisComputation();
+	void computeP();
+	void computeM();
+	void computeT();
+	void computeProjection();
+
+	void print(glm::vec3 v);
 
 //private:
-	//GLuint program;
-	GLuint FBO, VAO, VBO, EBO;
-	GLuint textureID;
-	GLuint texID;
-	GLenum DrawBuffers[1];
+	GLuint VAO, VBO, EBO;
 	glm::mat4 toWorld;
 
-	GLuint test2;
+	glm::vec3 pa, pb, pc;
+	glm::vec3 vr, vu, vn;
+	glm::vec3 pe;
 
-	GLuint loadTexture();
-	unsigned char* loadPPM(const char* filename, int& width, int& height);
-
-	const GLfloat vertices[8][3] = {
-	// "Front" vertices
-	{ -1.0, -1.0,  1.0 },{ 1.0, -1.0,  1.0 },{ 1.0,  1.0,  1.0 },{ -1.0,  1.0,  1.0 },
-	// "Back" vertices
-	{ -1.0, -1.0, -1.0 },{ 1.0, -1.0, -1.0 },{ 1.0,  1.0, -1.0 },{ -1.0,  1.0, -1.0 }
-	};
-
-
-	const GLuint indices[6][6] = {
-	// Front
-	{ 7, 4, 5, 5, 6, 7 },
-	// Back
-	{ 0, 3, 2, 2, 1, 0 },
-	// Left
-	{ 0, 4, 7, 7, 3, 0 },
-	// Right
-	{ 5, 1, 2, 2, 6, 5 },
-	// Top
-	{ 7, 6, 2, 2, 3, 7 },
-	// Bottom
-	{ 4, 0, 5, 5, 0, 1 }
-	};
+	glm::mat4 P_;
+	glm::mat4 M_;
+	glm::mat4 T_;
+	glm::mat4 P_final;
 };
 
 static const GLfloat g_quad_vertex_buffer_data[] = {
-	-0.5f, -0.5f, 0.f,
-	0.5f, -0.5f, 0.f,
-	-0.5f,  0.5f, 0.f,
-	-0.5f,  0.5f, 0.f,
-	0.5f, -0.5f, 0.f,
-	0.5f,  0.5f, 0.f,
+	-1.0f, -1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	-1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f, 0.0f,
+	1.0f, -1.0f, 0.0f,
+	1.0f,  1.0f, 0.0f,
 };
