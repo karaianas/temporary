@@ -13,9 +13,11 @@ public:
 	void createFB();
 	void drawMainScene(glm::mat4 V, glm::mat4 P, int test);
 	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id);
-	
+	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
+
 	void setViewport(int w0_, int h0_);
 	void setEye(glm::vec3 eyePos);
+	void changeCubeSize(float cubeSize);
 
 
 private:

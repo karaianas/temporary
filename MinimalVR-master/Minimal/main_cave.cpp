@@ -448,10 +448,11 @@ private:
 	bool cycleB;
 	int cycleBMode;
 
+	// -------------------------------------------------------------
 	bool sizeChange;
 	float cubeSize;
-	float IOD;
-	float dIOD;
+	bool isTrig;
+	// -------------------------------------------------------------
 
 	int skybox_left;
 	int skybox_right;
@@ -465,12 +466,6 @@ private:
 	glm::mat4 R_right;
 
 	ovrPosef eyePoses[2];
-
-	queue<glm::vec3> Q;
-	bool isSmooth;
-	int nframes;
-	glm::vec3 sum;
-	bool cycleI;
 
 	unsigned char * dataBufferX;
 	ovrHapticsBuffer bufferX;
@@ -575,14 +570,11 @@ protected:
 		cycleB = false;
 		cycleBMode = 0;
 
+		// -------------------------------------------------------------    
 		sizeChange = false;
 		cubeSize = 0.3f;
-
-		// Default IOD
-		float lOffset = _viewScaleDesc.HmdToEyePose[0].Position.x;
-		float rOffset = _viewScaleDesc.HmdToEyePose[1].Position.x;
-		dIOD = rOffset - lOffset;
-		IOD = dIOD;
+		isTrig = false;
+		// -------------------------------------------------------------
 
 		skybox_left = 0;
 		skybox_right = 1;
@@ -595,11 +587,6 @@ protected:
 		t_right = ovr::toGlm(eyePoses[eye_right])[3];
 		R_left = ovr::toGlm(eyePoses[eye_left]);
 		R_right = ovr::toGlm(eyePoses[eye_right]);
-
-		nframes = 1;
-		isSmooth = false;
-		sum = glm::vec3(0.0f);
-		cycleI = false;
 		//-------------------------
 
 		// Haptic
@@ -741,58 +728,39 @@ protected:
 			else
 				cycleB = false;
 
-			
-			// Change IOD
+
+			// -------------------------------------------------------------
+			// Change cube size
 			if (inputState.Thumbstick[ovrHand_Right].x > 0.9f)
 			{
-				IOD += 0.005f;
-				if (IOD > 0.3f)
-					IOD = 0.3f;
-				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
-				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
+				cubeSize += 0.01f;
+				if (cubeSize > 0.5f)
+					cubeSize = 0.5f;
+				changeCubeSize(cubeSize);
+
 			}
 			else if (inputState.Thumbstick[ovrHand_Right].x < -0.9f)
 			{
-				IOD -= 0.005f;
-				if (IOD < -0.1f)
-					IOD = -0.1f;
-				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
-				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
-			}
 
+				cubeSize -= 0.01f;
+				if (cubeSize < 0.01f)
+					cubeSize = 0.01f;
+				changeCubeSize(cubeSize);
+			}
 			if (inputState.Buttons & ovrButton_RThumb)
 			{
-				IOD = dIOD;
-				_viewScaleDesc.HmdToEyePose[0].Position.x = -IOD / 2.0f;
-				_viewScaleDesc.HmdToEyePose[1].Position.x = IOD / 2.0f;
+				cubeSize = 0.3f;
+				changeCubeSize(cubeSize);
 			}
 
-			// Change smoothing mode
-			if (inputState.IndexTrigger[ovrHand_Right] > 0.9f)
-			{
-				if (!cycleI)
-				{
-					cycleI = true;
-					nframes++;
-					nframes %= 45;
-					//cout << "nframes: " << nframes << endl;
-				}
-				else
-					cycleI = false;
-			}
-
+			// Change viewpoint
 			if (inputState.HandTrigger[ovrHand_Right] > 0.9f)
-			{
-				isSmooth = true;
-			}
+				isTrig = true;
 			else
-			{
-				isSmooth = false;
-				int size = Q.size();
-				for (int i = 0; i < size; i++)
-					Q.pop();
-				sum = glm::vec3(0.0f);
-			}
+				isTrig = false;
+
+			// -------------------------------------------------------------
+
 		}
 
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
@@ -804,41 +772,6 @@ protected:
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _fbo);
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		// ----------------------------------------------------------
-		glm::mat4 handM = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
-		glm::vec3 handPos = glm::vec3(handPoses[1].Position.x, handPoses[1].Position.y, handPoses[1].Position.z);
-
-		if (isSmooth)
-		{
-			if (Q.size() < nframes)
-			{
-				Q.push(glm::vec3(handPos));
-				sum += handPos;
-
-			}
-			else if (Q.size() == nframes)
-			{
-				sum -= Q.front();
-				Q.pop();
-				Q.push(glm::vec3(handPos));
-				sum += handPos;
-			}
-			else
-			{
-				while (Q.size() > nframes)
-				{
-					sum -= Q.front();
-					Q.pop();
-				}
-			}
-
-			glm::vec3 avg = sum / float(Q.size());
-			handM[3] = glm::vec4(avg, 1.0f);
-		}
-		else
-			handM[3] = glm::vec4(handPos, 1.0f);
-		// ----------------------------------------------------------
 
 		// ----------------------------------------------------------
 		glm::mat4 V_[2];
@@ -891,6 +824,7 @@ protected:
 			setViewport(vp0.Pos.x, vp0.Pos.y);
 			setEye(glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z));
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
+			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 		}
 
 		// Right eye
@@ -907,6 +841,7 @@ protected:
 			setViewport(vp1.Pos.x, vp1.Pos.y);
 			setEye(glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z));
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
+			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 		}
 
 
@@ -927,8 +862,10 @@ protected:
 
 
 	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) = 0;
+	virtual void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) = 0;
 	virtual void setViewport(int w0, int h0) = 0;
 	virtual void setEye(glm::vec3 eyePos) = 0;
+	virtual void changeCubeSize(float cubeSize) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1033,12 +970,22 @@ protected:
 		cave->drawMainScene(view, projection, fboID);
 	}
 
+	void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) {
+		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
+		model[3] = glm::vec4(pos, 1.0f);
+		cave->drawController(model, view, projection);
+	}
+
 	void setViewport(int w0, int h0) {
 		cave->setViewport(w0, h0);
 	}
 
 	void setEye(glm::vec3 eyePos) {
 		cave->setEye(eyePos);
+	}
+
+	void changeCubeSize(float cubeSize) {
+		cave->changeCubeSize(cubeSize);
 	}
 };
 

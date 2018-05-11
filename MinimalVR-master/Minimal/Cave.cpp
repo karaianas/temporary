@@ -78,18 +78,27 @@ Cave::Cave()
 	skyboxes.push_back(skybox_r);
 	skyboxes.push_back(skybox_x);
 	
+	float sFactor = 1.0f;//1.2f
+	float tFactor = sqrt(2) * sFactor / 2.0f;
+	float addtFactor = 1.0f;
+	float rFactor = pi / 4.0f;
+	glm::mat4 S_ = glm::scale(glm::mat4(1.0f), glm::vec3(sFactor));
+
 	plane_L = new Plane();
-	plane_L->toWorld = glm::rotate(glm::mat4(1.0f), pi / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	plane_L->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(-sqrt(2)/2.0f, 0.0f, -sqrt(2)/2.0f)) * plane_L->toWorld;
+	plane_L->toWorld = S_;
+	plane_L->toWorld *= glm::rotate(glm::mat4(1.0f), rFactor, glm::vec3(0.0f, 1.0f, 0.0f));
+	plane_L->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(-tFactor, 0.0f, -(tFactor + addtFactor))) * plane_L->toWorld;
 
 	plane_R = new Plane();
-	plane_R->toWorld = glm::rotate(glm::mat4(1.0f), -pi / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	plane_R->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(sqrt(2)/2.0f, 0.0f, -sqrt(2)/2.0f)) * plane_R->toWorld;
+	plane_R->toWorld = S_;
+	plane_R->toWorld *= glm::rotate(glm::mat4(1.0f), -rFactor, glm::vec3(0.0f, 1.0f, 0.0f));
+	plane_R->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(tFactor, 0.0f, -(tFactor + addtFactor))) * plane_R->toWorld;
 	
 	plane_B = new Plane();
-	plane_B->toWorld = glm::rotate(glm::mat4(1.0f), -pi / 4.0f, glm::vec3(0.0f, 0.0f, 1.0f));
+	plane_B->toWorld = S_;
+	plane_B->toWorld *= glm::rotate(glm::mat4(1.0f), -rFactor, glm::vec3(0.0f, 0.0f, 1.0f));
 	plane_B->toWorld = glm::rotate(glm::mat4(1.0f), -pi / 2.0f, glm::vec3(1.0f, 0.0f, 0.0f)) * plane_B->toWorld;
-	plane_B->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f)) * plane_B->toWorld;
+	plane_B->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -sFactor, -addtFactor)) * plane_B->toWorld;
 
 	w1 = 1344;
 	h1 = 1600;
@@ -158,6 +167,12 @@ void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id)
 	planes[id]->draw(program_plane, V, P, TBO);
 }
 
+void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
+{
+	glUseProgram(program_cont);
+	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
+}
+
 void Cave::setViewport(int w0_, int h0_)
 {
 	w0 = w0_;
@@ -173,5 +188,9 @@ void Cave::setEye(glm::vec3 eyePos)
 	}
 }
 
-
+void Cave::changeCubeSize(float cubeSize)
+{
+	cube->update(cubeSize);
+	cube2->update(cubeSize);
+}
 
