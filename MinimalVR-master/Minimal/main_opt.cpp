@@ -700,7 +700,7 @@ protected:
 				{
 					cycleA = true;
 					cycleAMode += 1;
-					cycleAMode %= 4;
+					cycleAMode %= 5;
 
 					if (cycleAMode == 0)
 					{
@@ -710,9 +710,14 @@ protected:
 					else if (cycleAMode == 1)
 					{
 						eye_left = 0;
-						eye_right = -1;
+						eye_right = 0;
 					}
 					else if (cycleAMode == 2)
+					{
+						eye_left = 0;
+						eye_right = -1;
+					}
+					else if (cycleAMode == 3)
 					{
 						eye_left = -1;
 						eye_right = 1;
