@@ -754,7 +754,7 @@ protected:
 			}
 
 			// Change viewpoint
-			if (inputState.HandTrigger[ovrHand_Right] > 0.9f)
+			if (inputState.IndexTrigger[ovrHand_Right] > 0.9f)
 				isTrig = true;
 			else
 				isTrig = false;
@@ -820,11 +820,15 @@ protected:
 		{
 			glm::mat4 V_left = V_mod[eye_left];
 			glm::mat4 V_inv = glm::inverse(V_left);
+			glm::vec3 handPos(handPosition[1].x, handPosition[1].y, handPosition[1].z);
 
 			setViewport(vp0.Pos.x, vp0.Pos.y);
-			setEye(glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z));
+			if (!isTrig)
+				setEye(glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z));
+			else
+				setEye(handPos - glm::vec3(-0.03f, 0.0f, 0.0f));
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
-			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			renderController(_eyeProjections[eye_left], V_inv, handPos);
 		}
 
 		// Right eye
@@ -837,11 +841,15 @@ protected:
 		{
 			glm::mat4 V_right = V_mod[eye_right];
 			glm::mat4 V_inv = glm::inverse(V_right);
+			glm::vec3 handPos(handPosition[1].x, handPosition[1].y, handPosition[1].z);
 
 			setViewport(vp1.Pos.x, vp1.Pos.y);
-			setEye(glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z));
+			if(!isTrig)
+				setEye(glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z));
+			else
+				setEye(handPos + glm::vec3(0.03f, 0.0f, 0.0f));
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
-			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			renderController(_eyeProjections[eye_right], V_inv, handPos);
 		}
 
 
