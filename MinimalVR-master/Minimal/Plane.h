@@ -18,10 +18,9 @@ public:
 	void setEye(glm::vec3 eye);
 
 	void offAxisComputation();
-	void computeP();
-	void computeM();
-	void computeT();
-	void computeProjection();
+	glm::mat4 computeP();
+	glm::mat4 computeM();
+	glm::mat4 computeT();
 
 	void print(glm::vec3 v);
 
@@ -33,9 +32,9 @@ public:
 	glm::vec3 vr, vu, vn;
 	glm::vec3 pe;
 
-	glm::mat4 P_;
-	glm::mat4 M_;
-	glm::mat4 T_;
+	//glm::mat4 P_;
+	//glm::mat4 M_;
+	//glm::mat4 T_;
 	glm::mat4 P_final;
 };
 

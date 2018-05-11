@@ -12,7 +12,7 @@ public:
 	Cave();
 	void createFB();
 	void drawMainScene(glm::mat4 V, glm::mat4 P, int test);
-	void drawTexture(glm::mat4 V, glm::mat4 P, int test);
+	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id);
 	
 	void setViewport(int w0_, int h0_);
 	void setEye(glm::vec3 eyePos);
@@ -34,5 +34,6 @@ private:
 	int w0, h0, w1, h1;
 	GLuint program_plane;
 	Plane* plane_L, *plane_R, *plane_B;
+	vector<Plane*> planes;
 	GLuint FBO, TBO, RBO;
 };

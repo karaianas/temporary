@@ -7,9 +7,7 @@ using namespace std;
 Plane::Plane()
 {
 	toWorld = glm::mat4(1.0f);
-	P_ = glm::mat4(0.0f);
-	M_ = glm::mat4(1.0f);
-	T_ = glm::mat4(1.0f);
+
 
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
@@ -39,7 +37,7 @@ void Plane::draw(GLuint program, glm::mat4 V, glm::mat4 P, int test)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, test);
 
-	glm::mat4 temp = P_final;
+	glm::mat4 temp = P;
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &temp[0][0]);
@@ -83,14 +81,13 @@ void Plane::setEye(glm::vec3 eye)
 
 void Plane::offAxisComputation()
 {
-	computeP();
-	computeM();
-	computeT();
-	computeProjection();
+	P_final = computeP() * computeM() * computeT();
 }
 
-void Plane::computeP()
+glm::mat4 Plane::computeP()
 {
+	glm::mat4 P_(0.0f);
+
 	glm::vec3 va, vb, vc;
 	va = pa - pe;
 	vb = pb - pe;
@@ -113,24 +110,26 @@ void Plane::computeP()
 	P_[2][2] = -(f + n) / (f - n);
 	P_[2][3] = -1.0f;
 	P_[3][2] = -(2 * f * n) / (f - n);
+
+	return P_;
 }
 
-void Plane::computeM()
+glm::mat4 Plane::computeM()
 {
+	glm::mat4 M_(1.0f);
 	M_[0] = glm::vec4(vr, 0.0f);
 	M_[1] = glm::vec4(vu, 0.0f);
 	M_[2] = glm::vec4(vn, 0.0f);
 	M_ = glm::transpose(M_);
+
+	return M_;
 }
 
-void Plane::computeT()
+glm::mat4 Plane::computeT()
 {
+	glm::mat4 T_(1.0f);
 	T_[3] = glm::vec4(-pe, 1.0f);
-}
-
-void Plane::computeProjection()
-{
-	P_final = P_ * M_ *T_;
+	return T_;
 }
 
 void Plane::print(glm::vec3 v)

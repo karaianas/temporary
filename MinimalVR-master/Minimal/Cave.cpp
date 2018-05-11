@@ -81,8 +81,6 @@ Cave::Cave()
 	plane_L = new Plane();
 	plane_L->toWorld = glm::rotate(glm::mat4(1.0f), pi / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	plane_L->toWorld = glm::translate(glm::mat4(1.0f), glm::vec3(-sqrt(2)/2.0f, 0.0f, -sqrt(2)/2.0f)) * plane_L->toWorld;
-	plane_L->setPoints();
-	plane_L->setBasis();
 
 	plane_R = new Plane();
 	plane_R->toWorld = glm::rotate(glm::mat4(1.0f), -pi / 4.0f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -96,6 +94,16 @@ Cave::Cave()
 	w1 = 1344;
 	h1 = 1600;
 	createFB();
+
+	planes.push_back(plane_L);
+	planes.push_back(plane_R);
+	planes.push_back(plane_B);
+
+	for (auto plane : planes)
+	{
+		plane->setPoints();
+		plane->setBasis();
+	}
 }
 
 void Cave::createFB()
@@ -124,29 +132,30 @@ void Cave::createFB()
 
 void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int test)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-	glViewport(0, 0, w1, h1);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	for (int i = 0; i < 3; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+		glViewport(0, 0, w1, h1);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	skyboxes[0]->draw(program_sky, V, P);
-	cube->draw(program, V, P);
-	cube2->draw(program, V, P);
+		skyboxes[0]->draw(program_sky, V, planes[i]->P_final);
+		cube->draw(program, V, planes[i]->P_final);
+		cube2->draw(program, V, planes[i]->P_final);
 
-	drawTexture(V, P, test);
+		drawTexture(V, P, test, i);
+	}
 }
 
-void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int test)
+void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id)
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, test);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
 	glViewport(w0, h0, w1, h1);
 	glDisable(GL_DEPTH_TEST);
 
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	plane_L->draw(program_plane, V, P, TBO);
-	//plane_R->draw(program_plane, V, P, TBO);
-	//plane_B->draw(program_plane, V, P, TBO);
+	planes[id]->draw(program_plane, V, P, TBO);
 }
 
 void Cave::setViewport(int w0_, int h0_)
@@ -157,8 +166,11 @@ void Cave::setViewport(int w0_, int h0_)
 
 void Cave::setEye(glm::vec3 eyePos)
 {
-	plane_L->setEye(eyePos);
-	plane_L->offAxisComputation();
+	for (auto plane : planes)
+	{
+		plane->setEye(eyePos);
+		plane->offAxisComputation();
+	}
 }
 
 
