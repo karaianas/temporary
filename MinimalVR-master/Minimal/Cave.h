@@ -11,12 +11,13 @@ class Cave {
 public:
 	Cave();
 	void createFB();
-	void drawMainScene(glm::mat4 V, glm::mat4 P, int test);
+	void drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_);
 	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id);
 	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 
 	void setViewport(int w0_, int h0_);
 	void setEye(glm::vec3 eyePos);
+	void setFreeze(int mode);
 	void changeCubeSize(float cubeSize);
 
 
@@ -38,4 +39,5 @@ private:
 	Plane* plane_L, *plane_R, *plane_B;
 	vector<Plane*> planes;
 	GLuint FBO, TBO, RBO;
+	int freezeMode;
 };

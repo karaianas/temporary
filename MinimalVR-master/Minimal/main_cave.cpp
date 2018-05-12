@@ -453,7 +453,10 @@ private:
 	bool cycleB;
 	bool isFreeze;
 	glm::vec3 handPos_;
-
+	glm::vec3 eyePos_[2];
+	glm::mat4 V_prev[2];
+	glm::mat4 V2_prev[2];
+	int saveState;
 	// -------------------------------------------------------------
 
 	int skybox_left;
@@ -577,6 +580,9 @@ protected:
 		cycleB = false;
 		isFreeze = false;
 		handPos_ = glm::vec3(0.0f);
+		eyePos_[0] = glm::vec3(0.0f);
+		eyePos_[1] = glm::vec3(0.0f);
+		saveState = -1;
 		// -------------------------------------------------------------
 
 		skybox_left = 0;
@@ -754,11 +760,21 @@ protected:
 				{
 					cycleB = true;
 					if (isFreeze)
+					{
 						isFreeze = false;
+						saveState = -1;
+					}
 					else
+					{
 						isFreeze = true;
+						if (isTrig)
+							saveState = 0;
+						else
+							saveState = 1;
+					}
 
-					//cout << isFreeze << endl;
+					//cout << saveState << endl;
+					setFreeze(saveState);
 				}
 			}
 			else
@@ -766,6 +782,7 @@ protected:
 			// -------------------------------------------------------------
 
 		}
+		//cout << saveState << endl;
 
 		ovr_GetEyePoses(_session, frame, true, _viewScaleDesc.HmdToEyePose, eyePoses, &_sceneLayer.SensorSampleTime);
 
@@ -777,83 +794,74 @@ protected:
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// ----------------------------------------------------------
-		glm::mat4 V_[2];
-		glm::mat4 V_mod[2];
-		V_[0] = ovr::toGlm(eyePoses[0]);
-		V_[1] = ovr::toGlm(eyePoses[1]);
-
-		t_left = V_[0][3];
-		R_left = V_[0];
-		t_right = V_[1][3];
-		R_right = V_[1];
-
-		V_mod[0] = R_left;
-		V_mod[0][3] = t_left;
-		V_mod[1] = R_right;
-		V_mod[1][3] = t_right;
-		// ----------------------------------------------------------
-
-
-		if (!isFreeze)
-			handPos_ = glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z);
-
-		glm::vec3 handPos = handPos_;
-		glm::vec3 lhandPos = handPos - glm::vec3(0.03f, 0.0f, 0.0f);
-		glm::vec3 rhandPos = handPos + glm::vec3(0.03f, 0.0f, 0.0f);
-
-		glm::vec3 lEyePos(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z);
-		glm::vec3 rEyePos(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z);
+		handPos_ = glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z);
+		eyePos_[0] = glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z);
+		eyePos_[1] = glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z);
 
 		glm::vec3 godEyePos[2];
+		glm::vec3 handPos[2];
+		glm::vec3 eyePos[2];
+
+		handPos[0] = handPos_ - glm::vec3(0.03f, 0.0f, 0.0f);
+		handPos[1] = handPos_ + glm::vec3(0.03f, 0.0f, 0.0f);
+		eyePos[0] = eyePos_[0];
+		eyePos[1] = eyePos_[1];
+
+		// ----------------------------------------------------------
+		glm::mat4 V_[2];
+		V_[0] = ovr::toGlm(eyePoses[0]);
+		V_[1] = ovr::toGlm(eyePoses[1]);
+		glm::mat4 R = glm::toMat4(glm::quat(handPoses[1].Orientation.w, handPoses[1].Orientation.x, handPoses[1].Orientation.y, handPoses[1].Orientation.z));
+		glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(handPos_));
+		handPos[0] = T * R * glm::inverse(T) * glm::vec4(handPos[0], 1.0f);
+		handPos[1] = T * R * glm::inverse(T) * glm::vec4(handPos[1], 1.0f);
+		// ----------------------------------------------------------
 
 		if (isTrig)
 		{
-			godEyePos[0] = lhandPos;
-			godEyePos[1] = rhandPos;
+			godEyePos[0] = handPos[0];
+			godEyePos[1] = handPos[1];
 		}
 		else
 		{
-			godEyePos[0] = lEyePos;
-			godEyePos[1] = rEyePos;
+			godEyePos[0] = eyePos[0];
+			godEyePos[1] = eyePos[1];
 		}
 
-
+		//cout << godEyePos[0].x << " " << godEyePos[0].y << " " << godEyePos[0].z << endl;
 		// ----------------------------------------------------------
 		// Left eye
 		const auto& vp0 = _sceneLayer.Viewport[0];
 		glViewport(vp0.Pos.x, vp0.Pos.y, vp0.Size.w, vp0.Size.h);
-		//cout << "L:" << vp0.Pos.x << " " << vp0.Pos.y << " " << vp0.Size.w << " " << vp0.Size.h << endl;
 		_sceneLayer.RenderPose[0] = eyePoses[0];
 
 		if (eye_left != -1)
 		{
-			glm::mat4 V_left = V_mod[eye_left];
+			glm::mat4 V_left = V_[eye_left];
 			glm::mat4 V_inv = glm::inverse(V_left);
 
 			setViewport(vp0.Pos.x, vp0.Pos.y);
 			setEye(godEyePos[0]);
 
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
-			renderController(_eyeProjections[eye_left], V_inv, handPos);
+			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 		}
 
 		// Right eye
 		const auto& vp1 = _sceneLayer.Viewport[1];
 		glViewport(vp1.Pos.x, vp1.Pos.y, vp1.Size.w, vp1.Size.h);
-		//cout << "R:" << vp1.Pos.x << " " << vp1.Pos.y << " " << vp1.Size.w << " " << vp1.Size.h << endl;
 		_sceneLayer.RenderPose[1] = eyePoses[1];
 
 		if (eye_right != -1)
 		{
-			glm::mat4 V_right = V_mod[eye_right];
+			glm::mat4 V_right = V_[eye_right];
 			glm::mat4 V_inv = glm::inverse(V_right);
 
 			setViewport(vp1.Pos.x, vp1.Pos.y);
 			setEye(godEyePos[1]);
 
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
-			renderController(_eyeProjections[eye_right], V_inv, handPos);
+			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 		}
 
 
@@ -877,6 +885,7 @@ protected:
 	virtual void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) = 0;
 	virtual void setViewport(int w0, int h0) = 0;
 	virtual void setEye(glm::vec3 eyePos) = 0;
+	virtual void setFreeze(int mode) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
 };
 
@@ -994,6 +1003,10 @@ protected:
 
 	void setEye(glm::vec3 eyePos) {
 		cave->setEye(eyePos);
+	}
+
+	void setFreeze(int mode) {
+		cave->setFreeze(mode);
 	}
 
 	void changeCubeSize(float cubeSize) {

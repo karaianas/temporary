@@ -113,6 +113,8 @@ Cave::Cave()
 		plane->setPoints();
 		plane->setBasis();
 	}
+
+	freezeMode = -1;
 }
 
 void Cave::createFB()
@@ -139,20 +141,21 @@ void Cave::createFB()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int test)
+void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_)
 {
 	for (int i = 0; i < 3; i++)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glViewport(0, 0, w1, h1);
 		glEnable(GL_DEPTH_TEST);
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		skyboxes[0]->draw(program_sky, V, planes[i]->P_final);
 		cube->draw(program, V, planes[i]->P_final);
 		cube2->draw(program, V, planes[i]->P_final);
 
-		drawTexture(V, P, test, i);
+		drawTexture(V, P, FBO_, i);
 	}
 }
 
@@ -186,6 +189,11 @@ void Cave::setEye(glm::vec3 eyePos)
 		plane->setEye(eyePos);
 		plane->offAxisComputation();
 	}
+}
+
+void Cave::setFreeze(int mode)
+{
+	freezeMode = mode;
 }
 
 void Cave::changeCubeSize(float cubeSize)
