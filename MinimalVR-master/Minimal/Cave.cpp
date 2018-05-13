@@ -108,18 +108,21 @@ Cave::Cave()
 	planes.push_back(plane_R);
 	planes.push_back(plane_B);
 
+	int counter = 0;
 	for (auto plane : planes)
 	{
 		plane->setPoints();
 		plane->setBasis();
-	}
 
-	vector<glm::vec3> corners;
-	corners.push_back(planes[0]->pa);
-	corners.push_back(planes[0]->pb);
-	corners.push_back(planes[0]->pd);
-	corners.push_back(planes[0]->pc);
-	pyramid = new Pyramid(corners);
+		vector<glm::vec3> corners;
+		corners.push_back(planes[counter]->pa);
+		corners.push_back(planes[counter]->pb);
+		corners.push_back(planes[counter]->pd);
+		corners.push_back(planes[counter]->pc);
+		Pyramid* pyramid = new Pyramid(corners);
+		pyramids.push_back(pyramid);
+		counter++;
+	}
 }
 
 void Cave::createFB()
@@ -153,7 +156,7 @@ void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_)
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glViewport(0, 0, w1, h1);
 		glEnable(GL_DEPTH_TEST);
-
+		//glClear(GL_DEPTH_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		skyboxes[0]->draw(program_sky, V_prev, planes[i]->P_final);
@@ -168,8 +171,8 @@ void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
 	glViewport(w0, h0, w1, h1);
-	glDisable(GL_DEPTH_TEST);
 
+	glDisable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	planes[id]->draw(program_plane, V, P, TBO);
@@ -183,8 +186,12 @@ void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 
 void Cave::drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr)
 {
-	pyramid->setEye(pos);
-	pyramid->draw(program_cont, V, P, lr);
+	for (int i = 0; i < 3; i++)
+	{
+		pyramids[i]->setEye(pos);
+		pyramids[i]->draw(program_cont, V, P, lr);
+	}
+
 }
 
 void Cave::setViewport(int w0_, int h0_)

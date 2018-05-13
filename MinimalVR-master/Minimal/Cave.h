@@ -43,5 +43,6 @@ private:
 	vector<Plane*> planes;
 	GLuint FBO, TBO, RBO;
 	glm::mat4 V_prev;
-	Pyramid* pyramid;
+	//Pyramid* pyramid;
+	vector<Pyramid*> pyramids;
 };
