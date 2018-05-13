@@ -455,6 +455,7 @@ private:
 	glm::vec3 handPos_;
 	glm::vec3 eyePos_[2];
 	glm::mat4 V_[2];
+	glm::mat4 V_fix[2];
 	int saveState;
 	glm::mat4 R_;
 	glm::mat4 Re_;
@@ -583,6 +584,21 @@ protected:
 		handPos_ = glm::vec3(0.0f);
 		eyePos_[0] = glm::vec3(0.0f);
 		eyePos_[1] = glm::vec3(0.0f);
+		//V_fix[0] = glm::mat4(1.0f);
+		//V_fix[1] = glm::mat4(1.0f);
+		ovrPosef temp0 = eyePoses[0];
+		ovrPosef temp1 = eyePoses[1];
+		temp0.Position.x = -0.03f;
+		temp0.Position.y = 0.0f;
+		temp0.Position.z = 0.0f;
+		temp1.Position.x = 0.03f;
+		temp1.Position.y = 0.0f;
+		temp1.Position.z = 0.0f;
+		V_fix[0] = ovr::toGlm(temp0);
+		V_fix[1] = ovr::toGlm(temp1);
+		//V_fix[0][3] = glm::vec4(-0.03f, 1.6f, 0.0f, 1.0f);
+		//V_fix[1][3] = glm::vec4(0.03f, 1.6f, 0.0f, 1.0f);
+
 		saveState = -1;
 		// -------------------------------------------------------------
 
@@ -910,10 +926,12 @@ protected:
 
 			setViewport(vp0.Pos.x, vp0.Pos.y);
 			setEye(godEyePos[0]);
-			setViewMatrix(glm::inverse(V_[0]));
+			setViewMatrix(glm::inverse(V_fix[0]));
 
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
 			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[0], 0);
+			renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[1], 1);
 		}
 
 		// Right eye
@@ -928,10 +946,13 @@ protected:
 
 			setViewport(vp1.Pos.x, vp1.Pos.y);
 			setEye(godEyePos[1]);
-			setViewMatrix(glm::inverse(V_[1]));
+			setViewMatrix(glm::inverse(V_fix[0]));
 
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
 			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[0], 0);
+			renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[1], 1);
+
 		}
 
 
@@ -953,6 +974,7 @@ protected:
 
 	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) = 0;
 	virtual void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) = 0;
+	virtual void renderPyramid(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos, bool lr) = 0;
 	virtual void setViewport(int w0, int h0) = 0;
 	virtual void setEye(glm::vec3 eyePos) = 0;
 	virtual void setViewMatrix(const glm::mat4 & view) = 0;
@@ -1066,6 +1088,10 @@ protected:
 		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.05f));
 		model[3] = glm::vec4(pos, 1.0f);
 		cave->drawController(model, view, projection);
+	}
+
+	void renderPyramid(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos, bool lr) {
+		cave->drawPyramid(view, projection, pos, lr);
 	}
 
 	void setViewport(int w0, int h0) {

@@ -28,7 +28,7 @@ public:
 	GLuint VAO, VBO, EBO;
 	glm::mat4 toWorld;
 
-	glm::vec3 pa, pb, pc;
+	glm::vec3 pa, pb, pc, pd;
 	glm::vec3 vr, vu, vn;
 	glm::vec3 pe;
 

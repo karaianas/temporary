@@ -1,7 +1,5 @@
 #include "Plane.h"
 
-
-
 using namespace std;
 
 Plane::Plane()
@@ -56,6 +54,7 @@ void Plane::setPoints()
 	pa = glm::vec3(toWorld * glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f));
 	pb = glm::vec3(toWorld * glm::vec4(1.0f, -1.0f, 0.0f, 1.0f));
 	pc = glm::vec3(toWorld * glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f));
+	pd = glm::vec3(toWorld * glm::vec4(1.0f, 1.0f, 0.0f, 1.0f));
 
 	//print(pa);
 	//print(pb);

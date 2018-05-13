@@ -113,6 +113,13 @@ Cave::Cave()
 		plane->setPoints();
 		plane->setBasis();
 	}
+
+	vector<glm::vec3> corners;
+	corners.push_back(planes[0]->pa);
+	corners.push_back(planes[0]->pb);
+	corners.push_back(planes[0]->pd);
+	corners.push_back(planes[0]->pc);
+	pyramid = new Pyramid(corners);
 }
 
 void Cave::createFB()
@@ -172,6 +179,12 @@ void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 {
 	glUseProgram(program_cont);
 	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
+}
+
+void Cave::drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr)
+{
+	pyramid->setEye(pos);
+	pyramid->draw(program_cont, V, P, lr);
 }
 
 void Cave::setViewport(int w0_, int h0_)

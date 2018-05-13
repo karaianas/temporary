@@ -4,6 +4,7 @@
 #include "Skybox.h"
 #include "shader.h"
 #include "Plane.h"
+#include "Pyramid.h"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ public:
 	void drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_);
 	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id);
 	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
+	void drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr);
 
 	void setViewport(int w0_, int h0_);
 	void setEye(glm::vec3 eyePos);
@@ -41,4 +43,5 @@ private:
 	vector<Plane*> planes;
 	GLuint FBO, TBO, RBO;
 	glm::mat4 V_prev;
+	Pyramid* pyramid;
 };

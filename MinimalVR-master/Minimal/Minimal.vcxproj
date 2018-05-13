@@ -138,6 +138,7 @@
     <ClCompile Include="main_cave.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Plane.cpp" />
+    <ClCompile Include="Pyramid.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="Skybox.cpp" />
@@ -160,6 +161,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Plane.h" />
+    <ClInclude Include="Pyramid.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="Skybox.h" />
