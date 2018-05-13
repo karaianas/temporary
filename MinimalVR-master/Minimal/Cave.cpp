@@ -80,7 +80,7 @@ Cave::Cave()
 	
 	float sFactor = 1.0f;//1.2f
 	float tFactor = sqrt(2) * sFactor / 2.0f;
-	float addtFactor = 1.0f;
+	float addtFactor = 0.0f;
 	float rFactor = pi / 4.0f;
 	glm::mat4 S_ = glm::scale(glm::mat4(1.0f), glm::vec3(sFactor));
 
@@ -113,8 +113,6 @@ Cave::Cave()
 		plane->setPoints();
 		plane->setBasis();
 	}
-
-	freezeMode = -1;
 }
 
 void Cave::createFB()
@@ -151,9 +149,9 @@ void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		skyboxes[0]->draw(program_sky, V, planes[i]->P_final);
-		cube->draw(program, V, planes[i]->P_final);
-		cube2->draw(program, V, planes[i]->P_final);
+		skyboxes[0]->draw(program_sky, V_prev, planes[i]->P_final);
+		cube->draw(program, V_prev, planes[i]->P_final);
+		cube2->draw(program, V_prev, planes[i]->P_final);
 
 		drawTexture(V, P, FBO_, i);
 	}
@@ -191,9 +189,9 @@ void Cave::setEye(glm::vec3 eyePos)
 	}
 }
 
-void Cave::setFreeze(int mode)
+void Cave::setViewMatrix(glm::mat4 V)
 {
-	freezeMode = mode;
+	V_prev = V;
 }
 
 void Cave::changeCubeSize(float cubeSize)

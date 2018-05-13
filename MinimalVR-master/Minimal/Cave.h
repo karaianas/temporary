@@ -17,7 +17,7 @@ public:
 
 	void setViewport(int w0_, int h0_);
 	void setEye(glm::vec3 eyePos);
-	void setFreeze(int mode);
+	void setViewMatrix(glm::mat4 V);
 	void changeCubeSize(float cubeSize);
 
 
@@ -39,5 +39,5 @@ private:
 	Plane* plane_L, *plane_R, *plane_B;
 	vector<Plane*> planes;
 	GLuint FBO, TBO, RBO;
-	int freezeMode;
+	glm::mat4 V_prev;
 };

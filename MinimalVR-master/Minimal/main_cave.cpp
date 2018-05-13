@@ -454,9 +454,10 @@ private:
 	bool isFreeze;
 	glm::vec3 handPos_;
 	glm::vec3 eyePos_[2];
-	glm::mat4 V_prev[2];
-	glm::mat4 V2_prev[2];
+	glm::mat4 V_[2];
 	int saveState;
+	glm::mat4 R_;
+	glm::mat4 Re_;
 	// -------------------------------------------------------------
 
 	int skybox_left;
@@ -774,7 +775,7 @@ protected:
 					}
 
 					//cout << saveState << endl;
-					setFreeze(saveState);
+					//setFreeze(saveState);
 				}
 			}
 			else
@@ -794,40 +795,78 @@ protected:
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, curTexId, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		handPos_ = glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z);
-		eyePos_[0] = glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z);
-		eyePos_[1] = glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z);
 
-		glm::vec3 godEyePos[2];
+		// ----------------------------------------------------------
+		glm::mat4 V[2];
+		V[0] = ovr::toGlm(eyePoses[0]);
+		V[1] = ovr::toGlm(eyePoses[1]);
+		// ----------------------------------------------------------
+
+		if (saveState == -1)
+		{
+			handPos_ = glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z);
+			eyePos_[0] = glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z);
+			eyePos_[1] = glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z);
+			R_ = glm::toMat4(glm::quat(handPoses[1].Orientation.w, handPoses[1].Orientation.x, handPoses[1].Orientation.y, handPoses[1].Orientation.z));
+			//Re_ = glm::toMat4(glm::quat(handPoses[1].Orientation.w, handPoses[1].Orientation.x, handPoses[1].Orientation.y, handPoses[1].Orientation.z));
+			V_[0] = ovr::toGlm(eyePoses[0]);
+			V_[1] = ovr::toGlm(eyePoses[1]);
+		}
+		else if (saveState == 0)
+		{
+			handPos_[0] = handPos_[0];
+			handPos_[1] = handPos_[1];
+			R_ = R_;
+			eyePos_[0] = glm::vec3(eyePoses[0].Position.x, eyePoses[0].Position.y, eyePoses[0].Position.z);
+			eyePos_[1] = glm::vec3(eyePoses[1].Position.x, eyePoses[1].Position.y, eyePoses[1].Position.z);
+			V_[0] = V_[0];
+			V_[1] = V_[1];
+		}
+		else
+		{
+			handPos_ = glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z);
+			R_ = glm::toMat4(glm::quat(handPoses[1].Orientation.w, handPoses[1].Orientation.x, handPoses[1].Orientation.y, handPoses[1].Orientation.z));
+			eyePos_[0] = eyePos_[0];
+			eyePos_[1] = eyePos_[1];
+			V_[0] = V_[0];
+			V_[1] = V_[1];
+		}
+
+		//V_[0][3] = V[0][3];
+		//V_[1][3] = V[1][3];
+		
 		glm::vec3 handPos[2];
-		glm::vec3 eyePos[2];
-
+		glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(handPos_));
 		handPos[0] = handPos_ - glm::vec3(0.03f, 0.0f, 0.0f);
 		handPos[1] = handPos_ + glm::vec3(0.03f, 0.0f, 0.0f);
-		eyePos[0] = eyePos_[0];
-		eyePos[1] = eyePos_[1];
+		handPos[0] = T * R_ * glm::inverse(T) * glm::vec4(handPos[0], 1.0f);
+		handPos[1] = T * R_ * glm::inverse(T) * glm::vec4(handPos[1], 1.0f);
 
-		// ----------------------------------------------------------
-		glm::mat4 V_[2];
-		V_[0] = ovr::toGlm(eyePoses[0]);
-		V_[1] = ovr::toGlm(eyePoses[1]);
-		glm::mat4 R = glm::toMat4(glm::quat(handPoses[1].Orientation.w, handPoses[1].Orientation.x, handPoses[1].Orientation.y, handPoses[1].Orientation.z));
-		glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(handPos_));
-		handPos[0] = T * R * glm::inverse(T) * glm::vec4(handPos[0], 1.0f);
-		handPos[1] = T * R * glm::inverse(T) * glm::vec4(handPos[1], 1.0f);
-		// ----------------------------------------------------------
 
-		if (isTrig)
+		glm::vec3 godEyePos[2];
+		if (saveState == -1)
+		{
+			if (isTrig)
+			{
+				godEyePos[0] = handPos[0];
+				godEyePos[1] = handPos[1];
+			}
+			else
+			{
+				godEyePos[0] = eyePos_[0];
+				godEyePos[1] = eyePos_[1];
+			}
+		}
+		else if (saveState == 0)
 		{
 			godEyePos[0] = handPos[0];
 			godEyePos[1] = handPos[1];
 		}
 		else
 		{
-			godEyePos[0] = eyePos[0];
-			godEyePos[1] = eyePos[1];
+			godEyePos[0] = eyePos_[0];
+			godEyePos[1] = eyePos_[1];
 		}
-
 		//cout << godEyePos[0].x << " " << godEyePos[0].y << " " << godEyePos[0].z << endl;
 		// ----------------------------------------------------------
 		// Left eye
@@ -837,11 +876,12 @@ protected:
 
 		if (eye_left != -1)
 		{
-			glm::mat4 V_left = V_[eye_left];
+			glm::mat4 V_left = V[eye_left];
 			glm::mat4 V_inv = glm::inverse(V_left);
 
 			setViewport(vp0.Pos.x, vp0.Pos.y);
 			setEye(godEyePos[0]);
+			setViewMatrix(glm::inverse(V_[0]));
 
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
 			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
@@ -854,11 +894,12 @@ protected:
 
 		if (eye_right != -1)
 		{
-			glm::mat4 V_right = V_[eye_right];
+			glm::mat4 V_right = V[eye_right];
 			glm::mat4 V_inv = glm::inverse(V_right);
 
 			setViewport(vp1.Pos.x, vp1.Pos.y);
 			setEye(godEyePos[1]);
+			setViewMatrix(glm::inverse(V_[1]));
 
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
 			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
@@ -885,7 +926,7 @@ protected:
 	virtual void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) = 0;
 	virtual void setViewport(int w0, int h0) = 0;
 	virtual void setEye(glm::vec3 eyePos) = 0;
-	virtual void setFreeze(int mode) = 0;
+	virtual void setViewMatrix(const glm::mat4 & view) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
 };
 
@@ -1005,8 +1046,8 @@ protected:
 		cave->setEye(eyePos);
 	}
 
-	void setFreeze(int mode) {
-		cave->setFreeze(mode);
+	void setViewMatrix(const glm::mat4 & view) {
+		cave->setViewMatrix(view);
 	}
 
 	void changeCubeSize(float cubeSize) {
