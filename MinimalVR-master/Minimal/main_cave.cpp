@@ -748,6 +748,35 @@ protected:
 				changeCubeSize(cubeSize);
 			}
 
+			// Move the cube position
+			// Left/right
+			if (inputState.Thumbstick[ovrHand_Left].x > 0.9f)
+			{
+				moveCubePos(glm::vec3(0.01f, 0.0f, 0.0f));
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].x < -0.9f)
+			{
+				moveCubePos(glm::vec3(-0.01f, 0.0f, 0.0f));
+			}
+			// Forward/back
+			if (inputState.Thumbstick[ovrHand_Left].y > 0.9f)
+			{
+				moveCubePos(glm::vec3(0.0f, 0.0f, 0.01f));
+			}
+			else if (inputState.Thumbstick[ovrHand_Left].y < -0.9f)
+			{
+				moveCubePos(glm::vec3(0.0f, 0.0f, -0.01f));
+			}
+			// Up/down
+			if (inputState.Thumbstick[ovrHand_Right].y > 0.9f)
+			{
+				moveCubePos(glm::vec3(0.0f, 0.01f, 0.0f));
+			}
+			else if (inputState.Thumbstick[ovrHand_Right].y < -0.9f)
+			{
+				moveCubePos(glm::vec3(0.0f, -0.01f, 0.0f));
+			}
+
 			// Change viewpoint
 			if (inputState.IndexTrigger[ovrHand_Right] > 0.9f)
 				isTrig = true;
@@ -928,6 +957,7 @@ protected:
 	virtual void setEye(glm::vec3 eyePos) = 0;
 	virtual void setViewMatrix(const glm::mat4 & view) = 0;
 	virtual void changeCubeSize(float cubeSize) = 0;
+	virtual void moveCubePos(glm::vec3 t) = 0;
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1052,6 +1082,10 @@ protected:
 
 	void changeCubeSize(float cubeSize) {
 		cave->changeCubeSize(cubeSize);
+	}
+
+	void moveCubePos(glm::vec3 t) {
+		cave->moveCubePos(t);
 	}
 };
 

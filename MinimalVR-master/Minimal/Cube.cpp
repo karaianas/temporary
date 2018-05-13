@@ -71,6 +71,11 @@ void Cube::update(float cubeSize)
 	toWorld = toWorld * glm::scale(glm::mat4(1.0f), glm::vec3(delta));
 }
 
+void Cube::translate(glm::vec3 t)
+{
+	toWorld = glm::translate(glm::mat4(1.0f), t) * toWorld;
+}
+
 GLuint Cube::loadTexture(vector<const char*> faces)
 {
 	GLuint textureID;

@@ -19,6 +19,7 @@ public:
 	void setEye(glm::vec3 eyePos);
 	void setViewMatrix(glm::mat4 V);
 	void changeCubeSize(float cubeSize);
+	void moveCubePos(glm::vec3 t);
 
 
 private:

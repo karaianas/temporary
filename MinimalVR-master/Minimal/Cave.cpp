@@ -200,3 +200,9 @@ void Cave::changeCubeSize(float cubeSize)
 	cube2->update(cubeSize);
 }
 
+void Cave::moveCubePos(glm::vec3 t)
+{
+	cube->translate(t);
+	cube2->translate(t);
+}
+

@@ -20,6 +20,7 @@ public:
 
 	void draw(GLuint program, glm::mat4 V, glm::mat4 P);
 	void update(float cubeSize);
+	void translate(glm::vec3 t);
 
 	// These variables are needed for the shader program
 	GLuint VBO, VAO, EBO;
