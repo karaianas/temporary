@@ -35,10 +35,12 @@ void Plane::draw(GLuint program, glm::mat4 V, glm::mat4 P, int test)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, test);
 
-	glm::mat4 temp = P;
+	//glm::mat4 temp = P;
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, GL_FALSE, &toWorld[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, &V[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &temp[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, &P[0][0]);
+	glUniform3f(glGetUniformLocation(program, "eyePos"), pe.x, pe.y, pe.z);
+	glUniform3f(glGetUniformLocation(program, "planeN"), vn.x, vn.y, vn.z);
 
 	// Draw the triangles !
 	//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -66,6 +68,8 @@ void Plane::setBasis()
 	vr = glm::normalize(pb - pa);
 	vu = glm::normalize(pc - pa);
 	vn = glm::normalize(glm::cross(vr, vu));
+
+	//cout << vn.x << " " << vn.y << " " << vn.z << endl;
 
 	//print(vr);
 	//print(vu);

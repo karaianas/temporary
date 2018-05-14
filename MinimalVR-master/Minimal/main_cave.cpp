@@ -442,7 +442,7 @@ private:
 
 	// My implementation
 	bool cycleX;
-	int cycleXMode;
+	bool isEC;
 	bool cycleA;
 	bool isDebug;
 	int cycleAMode;
@@ -572,7 +572,7 @@ protected:
 
 		//-------------------------
 		cycleX = false;
-		cycleXMode = 0;
+		isEC = false;
 		cycleA = false;
 		cycleAMode = 0;
 
@@ -676,6 +676,11 @@ protected:
 				if (!cycleX)
 				{
 					cycleX = true;
+					if (isEC)
+						isEC = false;
+					else
+						isEC = true;
+					/*
 					cycleXMode += 1;
 					cycleXMode %= 4;
 
@@ -703,6 +708,7 @@ protected:
 						skybox_right = 2;
 						isCube = true;
 					}
+					*/
 				}
 			}
 			else
@@ -714,6 +720,7 @@ protected:
 				if (!cycleA)
 				{
 					cycleA = true;
+
 					/*cycleAMode += 1;
 					cycleAMode %= 4;
 

@@ -27,7 +27,7 @@ Cave::Cave()
 	skybox_x = new Skybox();
 	controller = new Model("models//sphere//sphere2.obj");
 	//ucsd = new Model("models//nanosuit//nanosuit.obj");
-	ucsd = new Model("models//engineering-campus-small//engineering-campus.obj");
+	//ucsd = new Model("models//engineering-campus-small//engineering-campus.obj");
 
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));

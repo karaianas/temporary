@@ -23,7 +23,7 @@ public:
 	glm::mat4 computeT();
 
 	void print(glm::vec3 v);
-
+	
 //private:
 	GLuint VAO, VBO, EBO;
 	glm::mat4 toWorld;
