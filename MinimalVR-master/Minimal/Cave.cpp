@@ -26,6 +26,8 @@ Cave::Cave()
 	skybox_r = new Skybox();
 	skybox_x = new Skybox();
 	controller = new Model("models//sphere//sphere2.obj");
+	//ucsd = new Model("models//nanosuit//nanosuit.obj");
+	ucsd = new Model("models//engineering-campus-small//engineering-campus.obj");
 
 	glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.1f, 0.1f, 0.1f));
 	glm::mat4 S2 = glm::scale(glm::mat4(1.0f), glm::vec3(5.f, 5.f, 5.f));
@@ -159,6 +161,7 @@ void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_)
 		//glClear(GL_DEPTH_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
 		skyboxes[0]->draw(program_sky, V_prev, planes[i]->P_final);
 		cube->draw(program, V_prev, planes[i]->P_final);
 		cube2->draw(program, V_prev, planes[i]->P_final);
@@ -182,6 +185,8 @@ void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 {
 	glUseProgram(program_cont);
 	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
+	//glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.0001f));
+	//ucsd->Draw(program_cont, M * temp, V, P, glm::vec3(1.0f));
 }
 
 void Cave::drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr)

@@ -35,6 +35,7 @@ private:
 	Skybox* skybox_x;
 	vector<Skybox*> skyboxes;
 	Model* controller;
+	Model* ucsd;
 	
 	// Frame buffer rendering
 	int w0, h0, w1, h1;

@@ -444,6 +444,7 @@ private:
 	bool cycleX;
 	int cycleXMode;
 	bool cycleA;
+	bool isDebug;
 	int cycleAMode;
 
 	// -------------------------------------------------------------
@@ -579,6 +580,7 @@ protected:
 		sizeChange = false;
 		cubeSize = 0.3f;
 		isTrig = false;
+		isDebug = false;
 		cycleB = false;
 		isFreeze = false;
 		handPos_ = glm::vec3(0.0f);
@@ -712,7 +714,7 @@ protected:
 				if (!cycleA)
 				{
 					cycleA = true;
-					cycleAMode += 1;
+					/*cycleAMode += 1;
 					cycleAMode %= 4;
 
 					if (cycleAMode == 0)
@@ -734,7 +736,12 @@ protected:
 					{
 						eye_left = 1;
 						eye_right = 0;
-					}
+					}*/
+
+					if (isDebug)
+						isDebug = false;
+					else
+						isDebug = true;
 				}
 			}
 			else
@@ -930,8 +937,12 @@ protected:
 
 			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
 			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
-			renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[0], 0);
-			renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[1], 1);
+			
+			if (isDebug)
+			{
+				renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[0], 0);
+				renderPyramid(_eyeProjections[eye_left], V_inv, godEyePos[1], 1);
+			}
 		}
 
 		// Right eye
@@ -950,8 +961,11 @@ protected:
 
 			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
 			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
-			renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[0], 0);
-			renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[1], 1);
+			if (isDebug)
+			{
+				renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[0], 0);
+				renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[1], 1);
+			}
 
 		}
 

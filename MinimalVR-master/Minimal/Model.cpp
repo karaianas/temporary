@@ -20,7 +20,7 @@ void Model::loadModel(string const &path)
 	}
 	// retrieve the directory path of the filepath
 	directory = path.substr(0, path.find_last_of('/'));
-
+	//cout << directory << endl;
 	// process ASSIMP's root node recursively
 	processNode(scene->mRootNode, scene);
 }
@@ -36,6 +36,7 @@ void Model::processNode(aiNode *node, const aiScene *scene)
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshes.push_back(processMesh(mesh, scene));
 	}
+
 	// after we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
 	{
