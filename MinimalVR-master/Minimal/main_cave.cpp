@@ -681,7 +681,11 @@ protected:
 				{
 					cycleX = true;
 					if (isEC)
+					{
 						isEC = false;
+						randEye = -1;
+						randPlane = -1;
+					}
 					else
 					{
 						isEC = true;
