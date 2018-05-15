@@ -62,6 +62,8 @@ using glm::quat;
 #include "Cave.h"
 #include <time.h>
 #include <queue>
+#include <stdlib.h>
+#include <time.h> 
 
 bool checkFramebufferStatus(GLenum target = GL_FRAMEBUFFER) {
 	GLuint status = glCheckFramebufferStatus(target);
@@ -460,6 +462,8 @@ private:
 	int saveState;
 	glm::mat4 R_;
 	glm::mat4 Re_;
+	int randEye;
+	int randPlane;
 	// -------------------------------------------------------------
 
 	int skybox_left;
@@ -679,7 +683,13 @@ protected:
 					if (isEC)
 						isEC = false;
 					else
+					{
 						isEC = true;
+						srand(time(NULL));
+						randEye = rand() % 2;
+						randPlane = rand() % 3;
+					}
+
 					/*
 					cycleXMode += 1;
 					cycleXMode %= 4;
@@ -928,6 +938,8 @@ protected:
 		}
 		//cout << godEyePos[0].x << " " << godEyePos[0].y << " " << godEyePos[0].z << endl;
 		// ----------------------------------------------------------
+
+		
 		// Left eye
 		const auto& vp0 = _sceneLayer.Viewport[0];
 		glViewport(vp0.Pos.x, vp0.Pos.y, vp0.Size.w, vp0.Size.h);
@@ -942,7 +954,10 @@ protected:
 			setEye(godEyePos[0]);
 			setViewMatrix(glm::inverse(V_fix[0]));
 
-			renderCAVE(_eyeProjections[eye_left], V_inv, _fbo);
+			if(randEye == 0)
+				renderCAVE(_eyeProjections[eye_left], V_inv, _fbo, 1, randPlane);
+			else
+				renderCAVE(_eyeProjections[eye_left], V_inv, _fbo, 0, randPlane);
 			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 			
 			if (isDebug)
@@ -966,7 +981,10 @@ protected:
 			setEye(godEyePos[1]);
 			setViewMatrix(glm::inverse(V_fix[0]));
 
-			renderCAVE(_eyeProjections[eye_right], V_inv, _fbo);
+			if (randEye == 1)
+				renderCAVE(_eyeProjections[eye_right], V_inv, _fbo, 1, randPlane);
+			else
+				renderCAVE(_eyeProjections[eye_right], V_inv, _fbo, 0, randPlane);
 			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 			if (isDebug)
 			{
@@ -975,6 +993,7 @@ protected:
 			}
 
 		}
+		//renderScene(_eyeProjections[eye_right], glm::inverse(V[eye_right]), isEC);
 
 
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
@@ -992,8 +1011,8 @@ protected:
 
 	}
 
-
-	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) = 0;
+	virtual void renderScene(glm::mat4 & projection, const glm::mat4 & view, bool isEC) = 0;
+	virtual void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID, int randEye, int randPlane) = 0;
 	virtual void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) = 0;
 	virtual void renderPyramid(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos, bool lr) = 0;
 	virtual void setViewport(int w0, int h0) = 0;
@@ -1100,9 +1119,12 @@ protected:
 	void shutdownGl() override {
 	}
 
+	void renderScene(glm::mat4 & projection, const glm::mat4 & view, bool isEC) {
+		cave->drawScene(view, projection, isEC);
+	}
 
-	void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID) {
-		cave->drawMainScene(view, projection, fboID);
+	void renderCAVE(glm::mat4 & projection, const glm::mat4 & view, int fboID, int randEye, int randPlane) {
+		cave->drawMainScene(view, projection, fboID, randEye, randPlane);
 	}
 
 	void renderController(glm::mat4 & projection, const glm::mat4 & view, glm::vec3 pos) {

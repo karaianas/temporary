@@ -12,8 +12,9 @@ class Cave {
 public:
 	Cave();
 	void createFB();
-	void drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_);
-	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id);
+	void drawScene(glm::mat4 V, glm::mat4 P, bool isEC);
+	void drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_, int randEye, int randPlane);
+	void drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id, int randEye, int randPlane);
 	void drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P);
 	void drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr);
 

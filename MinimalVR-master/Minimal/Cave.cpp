@@ -76,6 +76,8 @@ Cave::Cave()
 	faces_x.push_back("textures//room//nz.ppm");
 	skybox_x->loadTexture(faces_x);
 
+	skybox_x->toWorld *= glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+
 	skyboxes.push_back(skybox_l);
 	skyboxes.push_back(skybox_r);
 	skyboxes.push_back(skybox_x);
@@ -151,26 +153,37 @@ void Cave::createFB()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_)
+void Cave::drawScene(glm::mat4 V, glm::mat4 P, bool isEC)
+{
+
+	//if (isEC)
+	//{
+	//	glEnable(GL_DEPTH_TEST);
+	//	skyboxes[2]->draw(program_sky, V, P);
+	//}
+		
+}
+
+void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_, int randEye, int randPlane)
 {
 	for (int i = 0; i < 3; i++)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 		glViewport(0, 0, w1, h1);
 		glEnable(GL_DEPTH_TEST);
-		//glClear(GL_DEPTH_BUFFER_BIT);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 		skyboxes[0]->draw(program_sky, V_prev, planes[i]->P_final);
 		cube->draw(program, V_prev, planes[i]->P_final);
 		cube2->draw(program, V_prev, planes[i]->P_final);
 
-		drawTexture(V, P, FBO_, i);
+		drawTexture(V, P, FBO_, i, randEye, randPlane);
 	}
 }
 
-void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id)
+void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id, int randEye, int randPlane)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
 	glViewport(w0, h0, w1, h1);
@@ -178,7 +191,10 @@ void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id)
 	glDisable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	planes[id]->draw(program_plane, V, P, TBO);
+	if(randEye && id != randPlane)
+		planes[id]->draw(program_plane, V, P, TBO);
+	else if(!randEye)
+		planes[id]->draw(program_plane, V, P, TBO);
 }
 
 void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)

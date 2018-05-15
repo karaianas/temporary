@@ -106,6 +106,7 @@ glm::mat4 Plane::computeP()
 	float b = glm::dot(vu, va) * n / d;
 	float t = glm::dot(vu, vc) * n / d;
 
+	//P_ = glFrustum(l, r, b, t, n, f);
 	P_[0][0] = 2 * n / (r - l);
 	P_[1][1] = 2 * n / (t - b);
 	P_[2][0] = (r + l) / (r - l);
