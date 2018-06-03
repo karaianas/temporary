@@ -1,6 +1,7 @@
 #pragma once
 #include "Model.h"
 
+
 class Scene {
 public:
 	Scene();
@@ -40,5 +41,7 @@ private:
 	vector<glm::vec3> pcolors;
 
 	int highlight;
+
+
 
 };

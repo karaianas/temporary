@@ -39,10 +39,19 @@
     <ClCompile Include="Cave.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="main_cave.cpp">
+    <ClCompile Include="Pyramid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Pyramid.cpp">
+    <ClCompile Include="OVR_PlatformLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Mirror.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AvaHand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -70,6 +79,18 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\pass.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\AvatarFragmentShader.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\AvatarFragmentShader_CombinedMesh.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\AvatarFragmentShaderPBS.glsl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\AvatarVertexShader.glsl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -105,6 +126,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Pyramid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OVR_Avatar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OVR_Avatar_Defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AvatarHand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AvaHand.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

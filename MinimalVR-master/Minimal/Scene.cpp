@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include <time.h> 
 
+
 #define VERTEX_SHADER_PATH "shaders//model.vert"
 #define FRAGMENT_SHADER_PATH "shaders//model.frag"
 
@@ -44,6 +45,7 @@ Scene::Scene()
 		randomEasy();
 	else if (level == 1)
 		randomMedium();
+
 }
 
 void Scene::draw(glm::mat4 V, glm::mat4 P)

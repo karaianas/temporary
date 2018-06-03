@@ -1164,7 +1164,7 @@ protected:
 
 // Execute our example class
 //int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-int main(int argc, char** argv) {
+int main_cave(int argc, char** argv) {
 	int result = -1;
 	try {
 		if (!OVR_SUCCESS(ovr_Initialize(nullptr))) {

@@ -127,6 +127,8 @@ Cave::Cave()
 		pyramids.push_back(pyramid);
 		counter++;
 	}
+
+	avatarHands = new AvaHand();
 }
 
 void Cave::createFB()
@@ -174,17 +176,18 @@ void Cave::drawMainScene(glm::mat4 V, glm::mat4 P, int FBO_, int randEye, int ra
 		glClear(GL_DEPTH_BUFFER_BIT);
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		skyboxes[0]->draw(program_sky, V_prev, planes[i]->P_final);
 		cube->draw(program, V_prev, planes[i]->P_final);
 		cube2->draw(program, V_prev, planes[i]->P_final);
 
 		drawTexture(V, P, FBO_, i, randEye, randPlane);
 	}
+
 }
 
 void Cave::drawTexture(glm::mat4 V, glm::mat4 P, int FBO_, int id, int randEye, int randPlane)
 {
+	saveFBO = FBO_;
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
 	glViewport(w0, h0, w1, h1);
 
@@ -203,6 +206,7 @@ void Cave::drawController(glm::mat4 M, glm::mat4 V, glm::mat4 P)
 	controller->Draw(program_cont, M, V, P, glm::vec3(1.0f));
 	//glm::mat4 temp = glm::scale(glm::mat4(1.0f), glm::vec3(0.0001f));
 	//ucsd->Draw(program_cont, M * temp, V, P, glm::vec3(1.0f));
+	//avatarHands->renderHands();
 }
 
 void Cave::drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr)
@@ -213,6 +217,25 @@ void Cave::drawPyramid(glm::mat4 V, glm::mat4 P, glm::vec3 pos, bool lr)
 		pyramids[i]->draw(program_cont, V, P, lr);
 	}
 
+}
+
+void Cave::drawHands(glm::mat4 view, glm::mat4 proj, glm::vec3 eyePos, ovrTrackingState trackState, ovrInputState inputState)
+{
+
+
+	////glUseProgram(program_cont);
+	//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	//glViewport(0, 0, w1, h1);
+	//glEnable(GL_DEPTH_TEST);
+	////glClear(GL_DEPTH_BUFFER_BIT);
+
+	avatarHands->renderHands(view, proj, eyePos, trackState, inputState);
+
+	//glBindFramebuffer(GL_FRAMEBUFFER, saveFBO);
+	//glViewport(w0, h0, w1, h1);
+
+	//glDisable(GL_DEPTH_TEST);
+	//glClear(GL_DEPTH_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
 }
 
 void Cave::setViewport(int w0_, int h0_)
