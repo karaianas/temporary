@@ -675,7 +675,7 @@ public:
 
 		// Draw the mesh
 		glBindVertexArray(data->vertexArray);
-		glDepthFunc(GL_LESS);
+		//glDepthFunc(GL_LESS);
 
 		//// Write to depth first for self-occlusion
 		//if (mesh->visibilityMask & ovrAvatarVisibilityFlag_SelfOccluding)
@@ -688,9 +688,9 @@ public:
 
 		//// Render to color buffer
 		//glDepthMask(GL_FALSE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glColorMaski(0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glDrawElements(GL_POINTS, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
-		//glDrawElements(GL_TRIANGLES, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
+		glDrawElements(GL_TRIANGLES, (GLsizei)data->elementCount, GL_UNSIGNED_SHORT, 0);
 		glBindVertexArray(0);
 
 		if (renderJoints)
@@ -700,6 +700,7 @@ public:
 			glDepthFunc(GL_ALWAYS);
 			_renderPose(proj * view * world * local, mesh->skinnedPose);
 		}
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 	void _renderSkinnedMeshPartPBS(const ovrAvatarRenderPart_SkinnedMeshRenderPBS* mesh, uint32_t visibilityMask, const glm::mat4& world, const glm::mat4& view, const glm::mat4 proj, const glm::vec3& viewPos, bool renderJoints)

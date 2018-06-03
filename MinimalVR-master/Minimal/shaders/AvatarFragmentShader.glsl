@@ -203,7 +203,6 @@ void main() {
 		color.rgb = ComputeBlend(layerBlendModes[i], color.rgb, layerColor, layerMask);
 	}
 	
-	
 	if (useAlpha)
 	{
 		color.a *= texture(alphaMask, uv * alphaMaskScaleOffset.xy + alphaMaskScaleOffset.zw).r;

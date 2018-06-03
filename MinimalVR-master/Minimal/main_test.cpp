@@ -984,7 +984,7 @@ protected:
 				renderCAVE(_eyeProjections[eye_left], V_inv, _fbo, 1, randPlane);
 			else
 				renderCAVE(_eyeProjections[eye_left], V_inv, _fbo, 0, randPlane);
-			renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			//renderController(_eyeProjections[eye_left], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 
 			if (isDebug)
 			{
@@ -1003,7 +1003,7 @@ protected:
 
 			renderHands(_eyeProjections[eye_left], V_inv, godEyePos[eye_left], trackState, inputState);
 			
-			//glBindFramebuffer(GL_FRAMEBUFFER, _fbo2);
+			//glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
 			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
 			//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0);
 		}
@@ -1026,7 +1026,7 @@ protected:
 				renderCAVE(_eyeProjections[eye_right], V_inv, _fbo, 1, randPlane);
 			else
 				renderCAVE(_eyeProjections[eye_right], V_inv, _fbo, 0, randPlane);
-			renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
+			//renderController(_eyeProjections[eye_right], V_inv, glm::vec3(handPosition[1].x, handPosition[1].y, handPosition[1].z));
 			if (isDebug)
 			{
 				renderPyramid(_eyeProjections[eye_right], V_inv, godEyePos[0], 0);
@@ -1034,7 +1034,7 @@ protected:
 			}
 
 			// ***************
-			//renderHands(_eyeProjections[eye_right], V_inv, godEyePos[eye_right], trackState, inputState);
+			renderHands(_eyeProjections[eye_right], V_inv, godEyePos[eye_right], trackState, inputState);
 		}
 		//renderScene(_eyeProjections[eye_right], glm::inverse(V[eye_right]), isEC);
 
